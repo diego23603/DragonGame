@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output
+/dist
+/build
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Optional: Uncomment if you're using these
+# /coverage
+# /.next/
+# /.nuxt/
+# /.cache/
+
+# Project specific
+# Add any other files/folders specific to your project that shouldn't be tracked
