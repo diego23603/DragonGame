@@ -1,0 +1,15 @@
+[
+  {
+    "username": "Javi",
+    "password": "$2b$10$FIDvoNqTuH6ZXRcQrO3xjuwL83epy0aWR3DMoaV2NABBCj9Jvk4/O",
+    "isAdmin": true
+  },
+  {
+    "username": "Diego3",
+    "password": "$2b$10$rGrEzjmYZjwLWP7MkdMPgee2wpJhAhlvBZ1MS3Hjb67/QwjjCNP4i"
+  },
+  {
+    "username": "Diego",
+    "password": "$2b$10$yM4guX2Q4Ie/Arz0E3h/y.0TzV2dLLQQ2Jbo57EAa5sNULjcg3Uwq"
+  }
+]

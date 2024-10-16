@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Dragón 2",
+    "image": "images/dragon2.png",
+    "size": 90
+  },
+  {
+    "name": "Dragón 3.1",
+    "image": "images/dragon3.png",
+    "size": 85
+  },
+  {
+    "name": "tormenta",
+    "image": "https://img.pixers.pics/pho_wat(s3:700/FO/48/59/53/48/700_FO48595348_e79443f3966b9d1229834084537ec633.jpg,700,653,cms:2018/10/5bd1b6b8d04b8_220x50-watermark.png,over,480,603,jpg)/posters-azul-dragon-volando.jpg.jpg",
+    "size": 90
+  }
+]
