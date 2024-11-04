@@ -4,31 +4,43 @@ let loadedSprites = new Map();
 let spriteLoadingPromises = new Map();
 
 async function initializeDragons() {
+    console.log('Initializing dragons...');
     try {
         const response = await fetch('/static/dragons.json');
         if (!response.ok) {
-            throw new Error('Failed to load dragons');
+            throw new Error('Failed to load dragons configuration');
         }
         const data = await response.json();
         availableDragons = data.dragons;
+        console.log('Loaded dragons configuration:', availableDragons);
         
         // Load previously selected dragon from localStorage
         const savedDragonId = localStorage.getItem('selectedDragonId');
         if (savedDragonId) {
+            console.log('Found previously selected dragon:', savedDragonId);
             selectedDragon = availableDragons.find(d => d.id === savedDragonId);
             if (selectedDragon) {
+                console.log('Restoring previous dragon selection:', selectedDragon.name);
                 await updateCharacterSprite(selectedDragon.sprite);
             }
         }
         
         // Preload all dragon sprites
-        await Promise.all(availableDragons.map(dragon => 
-            loadDragonSprite(dragon.sprite)
-        ));
+        console.log('Preloading dragon sprites...');
+        const loadingResults = await Promise.allSettled(
+            availableDragons.map(dragon => loadDragonSprite(dragon.sprite))
+        );
+        
+        // Log any sprite loading failures
+        loadingResults.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.error('Failed to load sprite for dragon:', availableDragons[index].name, result.reason);
+            }
+        });
         
         renderDragonOptions();
     } catch (error) {
-        console.error('Error loading dragons:', error);
+        console.error('Error initializing dragons:', error);
         const container = document.getElementById('dragonOptions');
         container.innerHTML = `
             <div class="alert alert-danger">
@@ -40,35 +52,41 @@ async function initializeDragons() {
 }
 
 async function loadDragonSprite(spritePath) {
+    console.log('Loading dragon sprite:', spritePath);
+    
     // Return cached sprite if available
     if (loadedSprites.has(spritePath)) {
+        console.log('Using cached sprite for:', spritePath);
         return loadedSprites.get(spritePath);
     }
     
     // Return existing promise if sprite is currently loading
     if (spriteLoadingPromises.has(spritePath)) {
+        console.log('Sprite already loading:', spritePath);
         return spriteLoadingPromises.get(spritePath);
     }
     
     // Create new loading promise
     const loadingPromise = new Promise((resolve, reject) => {
         try {
+            console.log('Starting new sprite load for:', spritePath);
             loadImage(spritePath, 
                 img => {
+                    console.log('Successfully loaded sprite:', spritePath);
                     loadedSprites.set(spritePath, img);
                     spriteLoadingPromises.delete(spritePath);
                     resolve(img);
                 },
                 error => {
-                    spriteLoadingPromises.delete(spritePath);
                     console.error('Failed to load sprite:', spritePath, error);
-                    reject(error);
+                    spriteLoadingPromises.delete(spritePath);
+                    reject(new Error(`Failed to load sprite ${spritePath}: ${error.message}`));
                 }
             );
         } catch (error) {
+            console.error('Error in loadImage:', spritePath, error);
             spriteLoadingPromises.delete(spritePath);
-            console.error('Error in loadImage:', error);
-            reject(error);
+            reject(new Error(`Error loading sprite ${spritePath}: ${error.message}`));
         }
     });
     
@@ -77,6 +95,7 @@ async function loadDragonSprite(spritePath) {
 }
 
 function renderDragonOptions() {
+    console.log('Rendering dragon options...');
     const container = document.getElementById('dragonOptions');
     container.innerHTML = '';
     
@@ -94,7 +113,8 @@ function renderDragonOptions() {
                      class="dragon-sprite mb-2 ${selectedDragon?.id === dragon.id ? 'selected' : ''}"
                      width="${dragon.size}" 
                      height="${dragon.size}"
-                     style="cursor: pointer; transition: all 0.3s ease;">
+                     style="cursor: pointer; transition: all 0.3s ease;"
+                     data-dragon-id="${dragon.id}">
                 <div class="dragon-name">${dragon.name}</div>
                 ${selectedDragon?.id === dragon.id ? 
                     '<div class="selected-indicator position-absolute top-0 start-0 w-100 h-100 border border-2 border-warning rounded"></div>' 
@@ -108,20 +128,24 @@ function renderDragonOptions() {
 }
 
 async function selectDragon(dragon) {
+    console.log('Selecting dragon:', dragon.name);
     try {
         // Load sprite if not already loaded
         if (!loadedSprites.has(dragon.sprite)) {
+            console.log('Loading sprite for selected dragon:', dragon.sprite);
             await loadDragonSprite(dragon.sprite);
         }
         
         selectedDragon = dragon;
         localStorage.setItem('selectedDragonId', dragon.id);
         
+        console.log('Updating character sprite...');
         await updateCharacterSprite(dragon.sprite);
         renderDragonOptions();
         
         // Notify server about dragon selection
         if (socket && window.authToken) {
+            console.log('Notifying server about dragon selection:', dragon.id);
             socket.emit('dragon_selected', {
                 dragonId: dragon.id,
                 username: window.username
@@ -148,13 +172,16 @@ async function selectDragon(dragon) {
 }
 
 async function updateCharacterSprite(spritePath) {
+    console.log('Updating character sprite:', spritePath);
     try {
         const sprite = await loadDragonSprite(spritePath);
         window.characterSprite = sprite;
+        console.log('Character sprite updated successfully');
     } catch (error) {
         console.error('Error updating character sprite:', error);
         // Use default sprite if available
         if (loadedSprites.has('/static/images/dragons/red_dragon.svg')) {
+            console.log('Using fallback red dragon sprite');
             window.characterSprite = loadedSprites.get('/static/images/dragons/red_dragon.svg');
         }
     }
@@ -163,3 +190,4 @@ async function updateCharacterSprite(spritePath) {
 // Export necessary variables and functions
 window.selectedDragon = selectedDragon;
 window.availableDragons = availableDragons;
+window.initializeDragons = initializeDragons;

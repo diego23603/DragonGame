@@ -465,25 +465,32 @@ function updateParticles() {
 }
 
 function drawCharacter(x, y, dragonSprite = characterSprite) {
-    if (dragonSprite) {
+    try {
+        if (!dragonSprite) {
+            console.warn('Missing dragon sprite for character rendering');
+            push();
+            fill(255, 0, 0);
+            noStroke();
+            circle(x, y, 24);
+            pop();
+            return;
+        }
+
         push();
         imageMode(CENTER);
-        
-        drawingContext.filter = 'url(#heat-distortion)';
-        
-        noFill();
-        for (let i = 0; i < 3; i++) {
-            stroke(255, 100, 100, (30 - i*10) + sin(frameCount * 0.1) * 20);
-            circle(x, y, 40 + i*10);
-        }
         
         noStroke();
         fill(0, 0, 0, 30);
         ellipse(x, y + 24, 40, 20);
         
         image(dragonSprite, x, y, 48, 48);
-        
-        drawingContext.filter = 'none';
+        pop();
+    } catch (error) {
+        console.error('Error drawing character:', error);
+        push();
+        fill(255, 0, 0);
+        noStroke();
+        circle(x, y, 24);
         pop();
     }
 }
@@ -497,6 +504,11 @@ function updateScore() {
 }
 
 function keyPressed() {
+    if (!characterSprite) {
+        console.warn('Character sprite not loaded yet - movement disabled');
+        return;
+    }
+
     const step = 10;
     let moved = false;
     lastPosition = { ...myPosition };
@@ -506,27 +518,42 @@ function keyPressed() {
         event.preventDefault();
     }
     
-    if (keyCode === LEFT_ARROW) {
-        myPosition.x = max(24, myPosition.x - step);
-        moved = true;
-    } else if (keyCode === RIGHT_ARROW) {
-        myPosition.x = min(mapSize.width - 24, myPosition.x + step);
-        moved = true;
-    } else if (keyCode === UP_ARROW) {
-        myPosition.y = max(24, myPosition.y - step);
-        moved = true;
-    } else if (keyCode === DOWN_ARROW) {
-        myPosition.y = min(mapSize.height - 24, myPosition.y + step);
-        moved = true;
-    }
-    
-    if (moved && socket) {
-        socket.emit('position_update', {
-            x: myPosition.x,
-            y: myPosition.y,
-            dragonId: selectedDragon?.id,
-            username: window.username
-        });
+    try {
+        if (keyCode === LEFT_ARROW) {
+            myPosition.x = max(24, myPosition.x - step);
+            moved = true;
+        } else if (keyCode === RIGHT_ARROW) {
+            myPosition.x = min(mapSize.width - 24, myPosition.x + step);
+            moved = true;
+        } else if (keyCode === UP_ARROW) {
+            myPosition.y = max(24, myPosition.y - step);
+            moved = true;
+        } else if (keyCode === DOWN_ARROW) {
+            myPosition.y = min(mapSize.height - 24, myPosition.y + step);
+            moved = true;
+        }
+        
+        if (moved && socket) {
+            try {
+                console.log('Emitting position update:', {
+                    x: myPosition.x,
+                    y: myPosition.y,
+                    dragonId: selectedDragon?.id
+                });
+                
+                socket.emit('position_update', {
+                    x: myPosition.x,
+                    y: myPosition.y,
+                    dragonId: selectedDragon?.id,
+                    username: window.username
+                });
+            } catch (socketError) {
+                console.error('Error emitting position update:', socketError);
+            }
+        }
+    } catch (error) {
+        console.error('Error in keyPressed function:', error);
+        myPosition = { ...lastPosition };
     }
 }
 
