@@ -3,6 +3,10 @@ let authToken = null;
 let currentUser = null;
 let isLoading = false;
 
+// Export auth token for other modules
+window.getAuthToken = () => authToken;
+window.getCurrentUser = () => currentUser;
+
 // UI Elements
 const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
@@ -10,6 +14,9 @@ const loginError = document.getElementById('loginError');
 const registerError = document.getElementById('registerError');
 const authSection = document.getElementById('authSection');
 const gameSection = document.getElementById('gameSection');
+
+// Custom event for auth state changes
+const AUTH_STATE_CHANGED = new Event('authStateChanged');
 
 // Initialize auth state from localStorage
 function initAuth() {
@@ -36,11 +43,14 @@ async function verifyToken(token) {
         } else {
             handleAuthError('Token expired');
             localStorage.removeItem('authToken');
+            authToken = null;
         }
     } catch (error) {
         handleAuthError('Authentication error');
+        authToken = null;
     } finally {
         setLoading(false);
+        document.dispatchEvent(AUTH_STATE_CHANGED);
     }
 }
 
@@ -137,6 +147,7 @@ async function handleLogout() {
         gameSection.style.display = 'none';
         
         showFeedback(loginError, 'Logged out successfully', 'success');
+        document.dispatchEvent(AUTH_STATE_CHANGED);
     } catch (error) {
         console.error('Logout error:', error);
     }
@@ -193,6 +204,8 @@ function handleAuthSuccess(token, data) {
     if (currentUser.isAdmin) {
         document.getElementById('adminSection').style.display = 'block';
     }
+
+    document.dispatchEvent(AUTH_STATE_CHANGED);
 }
 
 function handleAuthError(message, type = 'login') {
