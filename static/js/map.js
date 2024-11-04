@@ -10,7 +10,6 @@ let fireParticles = [];
 let smokeTrails = [];
 let dragonSilhouettes = [];
 let lastPosition = { x: 400, y: 300 };
-let username = '';
 
 const decorativeElements = [
     { x: 100, y: 100, type: 'castle', size: 80 },
@@ -85,7 +84,7 @@ function draw() {
     });
     
     drawCharacter(myPosition.x, myPosition.y, characterSprite);
-    drawPlayerName(myPosition.x, myPosition.y - 30, username || 'You');
+    drawPlayerName(myPosition.x, myPosition.y - 30, window.username || 'You');
     updateScore();
     checkCollectibles();
     checkPlayerCollisions();
@@ -414,7 +413,7 @@ function checkCollectibles() {
     collectibles.forEach((c, index) => {
         if (!c.collected && dist(myPosition.x, myPosition.y, c.x, c.y) < 30) {
             c.collected = true;
-            c.collectedBy = username;
+            c.collectedBy = window.username;
             score += 10;
             document.getElementById('currentScore').textContent = score;
             
@@ -425,7 +424,7 @@ function checkCollectibles() {
                     id: c.id,
                     x: c.x,
                     y: c.y,
-                    collectedBy: username
+                    collectedBy: window.username
                 });
             }
         }
@@ -526,7 +525,7 @@ function keyPressed() {
             x: myPosition.x,
             y: myPosition.y,
             dragonId: selectedDragon?.id,
-            username: username
+            username: window.username
         });
     }
 }

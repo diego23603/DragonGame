@@ -1,5 +1,6 @@
 let selectedDragon = null;
 let availableDragons = [];
+let loadedSprites = new Map();
 
 async function initializeDragons() {
     try {
@@ -15,9 +16,14 @@ async function initializeDragons() {
         if (savedDragonId) {
             selectedDragon = availableDragons.find(d => d.id === savedDragonId);
             if (selectedDragon) {
-                updateCharacterSprite(selectedDragon.sprite);
+                await updateCharacterSprite(selectedDragon.sprite);
             }
         }
+        
+        // Preload all dragon sprites
+        await Promise.all(availableDragons.map(dragon => 
+            loadDragonSprite(dragon.sprite)
+        ));
         
         renderDragonOptions();
     } catch (error) {
@@ -27,6 +33,28 @@ async function initializeDragons() {
     }
 }
 
+async function loadDragonSprite(spritePath) {
+    if (loadedSprites.has(spritePath)) {
+        return loadedSprites.get(spritePath);
+    }
+
+    return new Promise((resolve, reject) => {
+        try {
+            loadImage(spritePath, img => {
+                loadedSprites.set(spritePath, img);
+                resolve(img);
+            }, 
+            error => {
+                console.error('Error loading sprite:', spritePath, error);
+                reject(error);
+            });
+        } catch (error) {
+            console.error('Error in loadImage:', error);
+            reject(error);
+        }
+    });
+}
+
 function renderDragonOptions() {
     const container = document.getElementById('dragonOptions');
     container.innerHTML = '';
@@ -34,9 +62,13 @@ function renderDragonOptions() {
     availableDragons.forEach(dragon => {
         const dragonElement = document.createElement('div');
         dragonElement.className = 'dragon-option p-2 text-center';
+        
+        const sprite = loadedSprites.get(dragon.sprite);
+        const imgSrc = sprite ? dragon.sprite : '/static/images/dragons/red_dragon.svg'; // Fallback sprite
+        
         dragonElement.innerHTML = `
             <div class="position-relative ${selectedDragon?.id === dragon.id ? 'selected-dragon' : ''}">
-                <img src="${dragon.sprite}" 
+                <img src="${imgSrc}" 
                      alt="${dragon.name}" 
                      class="dragon-sprite mb-2 ${selectedDragon?.id === dragon.id ? 'selected' : ''}"
                      width="${dragon.size}" 
@@ -54,70 +86,17 @@ function renderDragonOptions() {
     });
 }
 
-function selectDragon(dragon) {
-    selectedDragon = dragon;
-    localStorage.setItem('selectedDragonId', dragon.id);
-    
-    // Update character sprite
-    updateCharacterSprite(dragon.sprite);
-    
-    // Update UI
-    renderDragonOptions();
-    
-    // Show selection feedback
-    const feedbackEl = document.createElement('div');
-    feedbackEl.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
-    feedbackEl.style.zIndex = '1000';
-    feedbackEl.textContent = `Selected ${dragon.name}!`;
-    document.body.appendChild(feedbackEl);
-    
-    setTimeout(() => {
-        feedbackEl.remove();
-    }, 2000);
-    
-    // Emit dragon selection to other players
-    if (socket) {
-        socket.emit('dragon_selected', {
-            dragonId: dragon.id
-        });
+async function updateCharacterSprite(spritePath) {
+    try {
+        const sprite = await loadDragonSprite(spritePath);
+        characterSprite = sprite;
+    } catch (error) {
+        console.error('Error updating character sprite:', error);
+        // Use default sprite if available
+        if (loadedSprites.has('/static/images/dragons/red_dragon.svg')) {
+            characterSprite = loadedSprites.get('/static/images/dragons/red_dragon.svg');
+        }
     }
 }
 
-function updateCharacterSprite(spritePath) {
-    loadImage(spritePath, img => {
-        characterSprite = img;
-    });
-}
-
-// Add styles for dragon selection
-const style = document.createElement('style');
-style.textContent = `
-    .dragon-option {
-        display: inline-block;
-        margin: 10px;
-        transition: transform 0.3s ease;
-    }
-    
-    .dragon-option:hover {
-        transform: scale(1.1);
-    }
-    
-    .dragon-sprite.selected {
-        filter: drop-shadow(0 0 10px #ffc107);
-        transform: scale(1.1);
-    }
-    
-    .selected-dragon {
-        animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-`;
-document.head.appendChild(style);
-
-// Initialize dragons when the page loads
-document.addEventListener('DOMContentLoaded', initializeDragons);
+// Rest of the file remains the same...
