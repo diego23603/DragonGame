@@ -354,6 +354,7 @@ function checkCollectibles() {
         if (!c.collected && dist(myPosition.x, myPosition.y, c.x, c.y) < 30) {
             c.collected = true;
             score += 10;
+            document.getElementById('currentScore').textContent = score;
             
             for (let i = 0; i < 20; i++) {
                 particles.push({
@@ -425,7 +426,7 @@ function updateScore() {
 }
 
 function keyPressed() {
-    const step = 5;
+    const step = 10;
     let moved = false;
     
     if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW || 
