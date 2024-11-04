@@ -1,30 +1,81 @@
+/* Dragon Theme Base Styles */
+:root {
+    --dragon-primary: #ff652f;
+    --dragon-secondary: #ffb703;
+    --dragon-accent: #ff5722;
+    --dragon-glow: rgba(255, 100, 100, 0.5);
+}
+
+body.dragon-themed {
+    background: radial-gradient(circle, #1e3c72, #2a5298);
+    font-family: 'Press Start 2P', sans-serif;
+    color: var(--bs-light);
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Animated Background Effect */
+body.dragon-themed::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M20 0L40 20L20 40L0 20Z" fill="%23ff652f" opacity="0.1"/></svg>') repeat;
+    opacity: 0.1;
+    z-index: -1;
+    animation: movePattern 20s linear infinite;
+}
+
+@keyframes movePattern {
+    0% { background-position: 0 0; }
+    100% { background-position: 100px 100px; }
+}
+
+/* Game Title */
+.game-title {
+    color: var(--dragon-primary);
+    text-shadow: 0 0 20px var(--dragon-glow);
+    font-size: 2.5em;
+    margin-bottom: 1em;
+    animation: glowPulse 2s infinite;
+}
+
+@keyframes glowPulse {
+    0% { text-shadow: 0 0 20px var(--dragon-glow); }
+    50% { text-shadow: 0 0 40px var(--dragon-glow); }
+    100% { text-shadow: 0 0 20px var(--dragon-glow); }
+}
+
 /* Map Container */
-#mapContainer {
+.map-container {
     width: 800px;
     height: 600px;
     margin: 20px auto;
-    border: 3px solid rgba(255, 100, 100, 0.8);
+    border: 3px solid var(--dragon-primary);
     border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 0 30px rgba(255, 100, 100, 0.3);
+    box-shadow: 0 0 30px var(--dragon-glow);
     position: relative;
     background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
 }
 
 /* Dragon Selection */
-#dragonSelection {
+.dragon-selection-container {
     background: rgba(0, 0, 0, 0.4);
     padding: 20px;
     border-radius: 15px;
+    border: 2px solid var(--dragon-secondary);
+    box-shadow: 0 0 20px var(--dragon-glow);
     margin-bottom: 20px;
 }
 
-#dragonOptions {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-top: 15px;
+.selection-title {
+    color: var(--dragon-secondary);
+    text-shadow: 0 0 10px var(--dragon-glow);
+    margin-bottom: 1em;
 }
 
 .dragon-option {
@@ -32,38 +83,133 @@
     border-radius: 10px;
     padding: 15px;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.dragon-option::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, var(--dragon-glow) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.dragon-option:hover::before {
+    opacity: 0.5;
 }
 
 .dragon-name {
     color: var(--bs-light);
     margin-top: 8px;
     font-size: 14px;
+    text-shadow: 0 0 5px var(--dragon-glow);
 }
 
-.selected-indicator {
-    border-radius: 10px;
-    pointer-events: none;
+/* Score Display */
+.score-display {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.2em;
+    color: var(--dragon-secondary);
+    margin-top: 15px;
+    text-shadow: 0 0 10px var(--dragon-glow);
+    animation: scoreGlow 2s infinite;
+}
+
+@keyframes scoreGlow {
+    0% { text-shadow: 0 0 10px var(--dragon-glow); }
+    50% { text-shadow: 0 0 20px var(--dragon-glow); }
+    100% { text-shadow: 0 0 10px var(--dragon-glow); }
+}
+
+/* Time Display */
+.time-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
+}
+
+.time-display {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 1.2em;
+    color: var(--dragon-secondary);
+    text-shadow: 0 0 10px var(--dragon-glow);
+    animation: timeGlow 2s infinite alternate;
+}
+
+@keyframes timeGlow {
+    0% { text-shadow: 0 0 5px var(--dragon-glow); }
+    100% { text-shadow: 0 0 15px var(--dragon-glow); }
+}
+
+/* Button Styles */
+.btn {
+    background: linear-gradient(135deg, var(--dragon-primary), var(--dragon-secondary));
+    border: none;
+    color: white;
+    padding: 0.5em 1em;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--dragon-glow);
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.btn:hover::after {
+    opacity: 1;
 }
 
 /* Canvas Styling */
 canvas {
     display: block;
     margin: 0 auto;
+    border-radius: 15px;
+    box-shadow: 0 0 30px var(--dragon-glow);
 }
 
-/* Score Display */
-#scoreBoard {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 1.2em;
-    color: var(--bs-warning);
-    margin-top: 15px;
-    text-shadow: 0 0 10px rgba(255, 100, 100, 0.5);
+/* Collectibles Animation */
+@keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
 }
 
-/* Time Display */
-.time-display {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 1.2em;
-    color: var(--bs-info);
-    text-shadow: 0 0 10px rgba(255, 100, 100, 0.5);
+.collectible {
+    animation: float 2s ease-in-out infinite;
+}
+
+/* Dragon Scale Pattern */
+.dragon-scale-pattern {
+    background-image: 
+        repeating-linear-gradient(
+            45deg,
+            var(--dragon-primary) 25%,
+            transparent 25%,
+            transparent 75%,
+            var(--dragon-primary) 75%,
+            var(--dragon-primary)
+        );
+    background-size: 20px 20px;
+    opacity: 0.1;
 }
