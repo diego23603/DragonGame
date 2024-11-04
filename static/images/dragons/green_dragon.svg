@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <path d="M24 8 L36 24 L24 40 L12 24 Z" fill="#44ff44" stroke="#00aa00" stroke-width="2"/>
+    <!-- Wings -->
+    <path d="M24 24 L36 16 L40 24 L36 32 Z" fill="#66ff66" stroke="#00aa00" stroke-width="2"/>
+    <path d="M24 24 L12 16 L8 24 L12 32 Z" fill="#66ff66" stroke="#00aa00" stroke-width="2"/>
+    <!-- Head -->
+    <circle cx="24" cy="16" r="6" fill="#44ff44" stroke="#00aa00" stroke-width="2"/>
+    <!-- Eyes -->
+    <circle cx="22" cy="14" r="1" fill="#ffff00"/>
+    <circle cx="26" cy="14" r="1" fill="#ffff00"/>
+</svg>

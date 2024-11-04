@@ -22,8 +22,9 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 db.init_app(app)
 socketio.init_app(app)
 
-# Store collectible states
+# Store states
 collectibles_state = {}
+user_dragons = {}
 
 @app.route('/')
 def index():
@@ -32,33 +33,31 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     emit('user_connected', {'data': 'Connected'})
-    # Send current collectibles state to new user
     emit('collectibles_state', collectibles_state)
 
 @socketio.on('position_update')
 def handle_position_update(data):
-    user_id = data['user_id']
-    x = data['x']
-    y = data['y']
-    
-    # Update user position in database
-    from models import User
-    user = User.query.get(user_id)
-    if user:
-        user.x_pos = x
-        user.y_pos = y
-        db.session.commit()
-    
-    # Broadcast position to all other users
-    emit('user_moved', data, broadcast=True, include_self=False)
+    user_id = request.sid
+    emit('user_moved', {
+        'userId': user_id,
+        'x': data['x'],
+        'y': data['y'],
+        'dragonId': data.get('dragonId', None)
+    }, broadcast=True)
+
+@socketio.on('dragon_selected')
+def handle_dragon_selected(data):
+    user_id = request.sid
+    user_dragons[user_id] = data['dragonId']
+    emit('dragon_selected', {
+        'userId': user_id,
+        'dragonId': data['dragonId']
+    }, broadcast=True)
 
 @socketio.on('collectible_collected')
 def handle_collectible_collected(data):
-    # Create a unique identifier for the collectible
     collectible_id = f"{data['x']}_{data['y']}"
     collectibles_state[collectible_id] = True
-    
-    # Broadcast to all clients that this collectible was collected
     emit('collectible_collected', {
         'x': data['x'],
         'y': data['y']

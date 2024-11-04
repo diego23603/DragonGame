@@ -27,13 +27,44 @@ function calculateBrightness(hour) {
 
 function toggleDayNightMode() {
     isAutomatic = !isAutomatic;
+    const button = document.getElementById('toggleDayNight');
+    
     if (!isAutomatic) {
         manualTime = getCurrentHour();
+        button.textContent = 'Switch to Automatic Mode';
+        // Add manual time controls
+        createManualControls();
+    } else {
+        button.textContent = 'Switch to Manual Mode';
+        // Remove manual controls
+        const controls = document.getElementById('manualControls');
+        if (controls) controls.remove();
+    }
+    updateTimeDisplay();
+}
+
+function createManualControls() {
+    let controls = document.getElementById('manualControls');
+    if (!controls) {
+        controls = document.createElement('div');
+        controls.id = 'manualControls';
+        controls.className = 'mt-2';
+        controls.innerHTML = `
+            <button onclick="adjustTime(-1)" class="btn btn-sm me-2">-1 Hour</button>
+            <button onclick="adjustTime(1)" class="btn btn-sm">+1 Hour</button>
+        `;
+        document.getElementById('toggleDayNight').parentNode.appendChild(controls);
     }
 }
 
-// Update time display with dragon theme styling
-setInterval(() => {
+function adjustTime(hours) {
+    if (!isAutomatic) {
+        manualTime = (manualTime + hours + 24) % 24;
+        updateTimeDisplay();
+    }
+}
+
+function updateTimeDisplay() {
     const hour = isAutomatic ? getCurrentHour() : manualTime;
     const timeElement = document.getElementById('timeDisplay');
     if (timeElement) {
@@ -41,7 +72,10 @@ setInterval(() => {
             `${Math.floor(hour)}:${String(Math.floor((hour % 1) * 60)).padStart(2, '0')}`;
         timeElement.style.textShadow = `0 0 10px rgba(255, 100, 100, ${0.5 + Math.sin(Date.now() * 0.002) * 0.3})`;
     }
-}, 1000);
+}
+
+// Update time display regularly
+setInterval(updateTimeDisplay, 1000);
 
 // Add event listener for toggle button
 document.getElementById('toggleDayNight').addEventListener('click', toggleDayNightMode);

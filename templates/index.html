@@ -17,10 +17,17 @@
                 <h1 class="text-center mb-4">Dragon World</h1>
                 <div class="mb-3">
                     <button id="toggleDayNight" class="btn">
-                        Toggle Day/Night Mode
+                        Switch to Manual Mode
                     </button>
                     <span id="timeDisplay" class="ms-3 time-display"></span>
                 </div>
+
+                <!-- Dragon Selection -->
+                <div id="dragonSelection" class="mb-4">
+                    <h3>Choose Your Dragon</h3>
+                    <div id="dragonOptions" class="d-flex justify-content-center gap-4"></div>
+                </div>
+
                 <div id="mapContainer" class="dragon-themed"></div>
                 <div id="scoreBoard" class="mt-3">
                     Score: <span id="currentScore">0</span>
@@ -31,6 +38,7 @@
     
     <script src="/static/js/websocket.js"></script>
     <script src="/static/js/daycycle.js"></script>
+    <script src="/static/js/dragons.js"></script>
     <script src="/static/js/map.js"></script>
 </body>
 </html>
