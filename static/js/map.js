@@ -39,21 +39,47 @@ function setup() {
     canvas.parent('mapContainer');
     frameRate(60);
     
-    // Initialize NPCs
-    console.log('Initializing NPCs...');
+    // Load character sprite if not loaded
+    if (!characterSprite && window.selectedDragon) {
+        characterSprite = loadedSprites.get(window.selectedDragon.sprite);
+    }
+    
+    // Initialize game elements
     initializeNPCs();
-    
-    // Initialize collectibles
-    console.log('Initializing collectibles...');
     initializeCollectibles();
-    
-    // Initialize dragon silhouettes
-    console.log('Initializing dragon silhouettes...');
     initializeSilhouettes();
 }
 
+function draw() {
+    // Get background color based on day/night cycle
+    const bgColor = getDayNightColor();
+    background(bgColor);
+    
+    // Draw background elements
+    drawGrid();
+    drawSilhouettes();
+    
+    // Draw game elements
+    drawCollectibles();
+    drawNPCs();
+    
+    // Draw characters
+    drawCharacters();
+    
+    // Draw UI elements
+    drawUI();
+    
+    // Update character position with smooth lerp
+    if (lastPosition && myPosition) {
+        myPosition.x = lerp(lastPosition.x, myPosition.x, 0.3);
+        myPosition.y = lerp(lastPosition.y, myPosition.y, 0.3);
+    }
+    
+    // Check for NPC interactions
+    checkNPCInteractions();
+}
+
 function initializeNPCs() {
-    // Add NPCs at strategic locations
     npcs = [
         {
             type: 'merchant',
@@ -110,26 +136,6 @@ function initializeSilhouettes() {
     }
 }
 
-function draw() {
-    // Get background color based on day/night cycle
-    const bgColor = getDayNightColor();
-    background(bgColor);
-    
-    // Draw game elements
-    drawGrid();
-    drawCollectibles();
-    drawNPCs();
-    drawCharacters();
-    drawUI();
-    
-    // Update character position with smooth lerp
-    myPosition.x = lerp(lastPosition.x, myPosition.x, 0.3);
-    myPosition.y = lerp(lastPosition.y, myPosition.y, 0.3);
-    
-    // Check for NPC interactions
-    checkNPCInteractions();
-}
-
 function drawGrid() {
     stroke(255, 255, 255, 20);
     strokeWeight(1);
@@ -139,6 +145,75 @@ function drawGrid() {
     for (let y = 0; y < height; y += 50) {
         line(0, y, width, y);
     }
+}
+
+function drawCollectibles() {
+    collectibles.forEach(collectible => {
+        if (!collectible.collected) {
+            push();
+            translate(collectible.x, collectible.y);
+            
+            // Float animation
+            let floatY = sin(frameCount * 0.05 + collectible.floatOffset) * 5;
+            
+            // Glow effect
+            let glowSize = 20 + sin(frameCount * 0.1 + collectible.glowPhase) * 5;
+            noStroke();
+            fill(255, 200, 0, 50);
+            ellipse(0, floatY, glowSize, glowSize);
+            
+            // Draw collectible based on type
+            fill(255, 220, 0);
+            stroke(200, 150, 0);
+            strokeWeight(2);
+            
+            if (collectible.type === 'dragon_egg') {
+                ellipse(0, floatY, 15, 20);
+            } else if (collectible.type === 'dragon_scale') {
+                beginShape();
+                for (let i = 0; i < 5; i++) {
+                    let angle = TWO_PI * i / 5 - HALF_PI;
+                    vertex(cos(angle) * 10, sin(angle) * 10 + floatY);
+                }
+                endShape(CLOSE);
+            } else {
+                rect(-10, -10 + floatY, 20, 20);
+            }
+            
+            // Rotating rune circle
+            collectible.runeRotation += 0.02;
+            stroke(255, 150, 0, 100);
+            noFill();
+            push();
+            rotate(collectible.runeRotation);
+            circle(0, floatY, 30);
+            line(-15, floatY, 15, floatY);
+            line(0, floatY - 15, 0, floatY + 15);
+            pop();
+            
+            pop();
+        }
+    });
+}
+
+function drawSilhouettes() {
+    push();
+    noStroke();
+    dragonSilhouettes.forEach(dragon => {
+        dragon.x += dragon.speed;
+        if (dragon.x > width + dragon.size) dragon.x = -dragon.size;
+        
+        let y = dragon.y + sin(frameCount * 0.02 + dragon.offset) * 20;
+        fill(255, 100, 50, 30);
+        
+        beginShape();
+        vertex(dragon.x, y);
+        vertex(dragon.x + dragon.size * 0.8, y - dragon.size * 0.2);
+        vertex(dragon.x + dragon.size, y);
+        vertex(dragon.x + dragon.size * 0.8, y + dragon.size * 0.2);
+        endShape(CLOSE);
+    });
+    pop();
 }
 
 function drawNPCs() {
@@ -213,7 +288,6 @@ function drawCharacter(x, y, dragonSprite = characterSprite) {
 }
 
 function drawUI() {
-    // Draw score
     push();
     fill(255);
     noStroke();
@@ -226,13 +300,12 @@ function drawUI() {
 function checkNPCInteractions() {
     npcs.forEach(npc => {
         const d = dist(myPosition.x, myPosition.y, npc.x, npc.y);
-        if (d < 50) { // Interaction radius
+        if (d < 50) {
             const currentTime = millis();
-            if (currentTime - npc.lastInteractionTime > 2000) { // Cooldown period
+            if (currentTime - npc.lastInteractionTime > 2000) {
                 npc.dialogueIndex = (npc.dialogueIndex + 1) % npc.dialogue.length;
                 npc.lastInteractionTime = currentTime;
                 
-                // Display dialogue
                 const dialogueText = npc.dialogue[npc.dialogueIndex];
                 displayDialogue(npc.x, npc.y - 50, dialogueText);
             }
@@ -264,7 +337,6 @@ function keyPressed() {
     let moved = false;
     lastPosition = { ...myPosition };
     
-    // Prevent default behavior for arrow keys
     if ([LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW].includes(keyCode)) {
         event.preventDefault();
     }
@@ -307,7 +379,6 @@ function keyPressed() {
     }
 }
 
-// Export necessary functions for p5.js
 window.setup = setup;
 window.draw = draw;
 window.keyPressed = keyPressed;
