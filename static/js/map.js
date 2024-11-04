@@ -114,15 +114,47 @@ function initializeNPCs() {
 }
 
 function initializeCollectibles() {
-    const collectibleTypes = ['dragon_egg', 'dragon_scale', 'magic_crystal'];
-    for (let i = 0; i < 5; i++) {
+    const collectibleTypes = [
+        {
+            type: 'dragon_egg',
+            value: 50,
+            color: '#FFD700',
+            size: 25,
+            pulseSpeed: 0.08,
+            particleColor: '#FFE4B5'
+        },
+        {
+            type: 'dragon_scale',
+            value: 30,
+            color: '#4169E1',
+            size: 20,
+            pulseSpeed: 0.05,
+            particleColor: '#87CEEB'
+        },
+        {
+            type: 'magic_crystal',
+            value: 40,
+            color: '#FF1493',
+            size: 22,
+            pulseSpeed: 0.06,
+            particleColor: '#FF69B4'
+        }
+    ];
+
+    for (let i = 0; i < 8; i++) {
+        const type = random(collectibleTypes);
         collectibles.push({
             x: random(50, mapSize.width - 50),
             y: random(50, mapSize.height - 50),
-            type: random(collectibleTypes),
+            type: type.type,
             collected: false,
-            value: random([10, 20, 30]),
-            pulsePhase: random(TWO_PI)
+            value: type.value,
+            color: type.color,
+            size: type.size,
+            pulseSpeed: type.pulseSpeed,
+            particleColor: type.particleColor,
+            pulsePhase: random(TWO_PI),
+            rotationAngle: 0
         });
     }
 }
@@ -354,33 +386,101 @@ function drawCollectibles() {
             push();
             translate(c.x, c.y);
             
-            let pulseSize = 20 + sin(frameCount * 0.05 + c.pulsePhase) * 5;
+            c.rotationAngle += 0.02;
+            rotate(c.rotationAngle);
             
-            noFill();
+            let pulseSize = c.size + sin(frameCount * c.pulseSpeed + c.pulsePhase) * 5;
+            
             for (let i = 0; i < 3; i++) {
-                stroke(255, 200, 0, 50 - i * 15);
-                circle(0, 0, pulseSize + i * 10);
+                noFill();
+                stroke(c.color);
+                strokeWeight(2 - i * 0.5);
+                let auraSize = pulseSize + i * 15;
+                
+                if (c.type === 'dragon_egg') {
+                    ellipse(0, 0, auraSize * 0.8, auraSize);
+                } else if (c.type === 'dragon_scale') {
+                    beginShape();
+                    for (let a = 0; a < TWO_PI; a += PI / 3) {
+                        let x = cos(a) * (auraSize / 2);
+                        let y = sin(a) * (auraSize / 2);
+                        vertex(x, y);
+                    }
+                    endShape(CLOSE);
+                } else {
+                    beginShape();
+                    for (let a = 0; a < TWO_PI; a += PI / 4) {
+                        let r = (a % (PI / 2) < 0.1) ? auraSize * 0.6 : auraSize * 0.4;
+                        let x = cos(a) * r;
+                        let y = sin(a) * r;
+                        vertex(x, y);
+                    }
+                    endShape(CLOSE);
+                }
             }
             
-            fill(255, 200, 0);
+            fill(c.color);
             noStroke();
-            circle(0, 0, pulseSize);
             
+            if (c.type === 'dragon_egg') {
+                ellipse(0, 0, pulseSize * 0.8, pulseSize);
+                fill(brighten(c.color));
+                ellipse(-pulseSize/6, -pulseSize/6, pulseSize/4);
+            } else if (c.type === 'dragon_scale') {
+                drawScale(pulseSize);
+            } else {
+                drawCrystal(pulseSize);
+            }
+            
+            resetMatrix();
             textAlign(CENTER);
             textSize(12);
-            const labelY = pulseSize + 15;
-            const labelWidth = textWidth(c.type);
-            
+            const labelY = c.y + c.size + 20;
             fill(0, 0, 0, 180);
             noStroke();
-            rect(-labelWidth/2 - 5, labelY - 10, labelWidth + 10, 20, 5);
-            
+            rect(c.x - 50, labelY - 10, 100, 20, 5);
             fill(255);
-            text(c.type, 0, labelY + 5);
+            text(formatCollectibleName(c.type), c.x, labelY + 5);
             
             pop();
         }
     });
+}
+
+function drawScale(size) {
+    beginShape();
+    for (let a = 0; a < TWO_PI; a += PI / 3) {
+        let x = cos(a) * (size / 2);
+        let y = sin(a) * (size / 2);
+        vertex(x, y);
+    }
+    endShape(CLOSE);
+}
+
+function drawCrystal(size) {
+    beginShape();
+    for (let a = 0; a < TWO_PI; a += PI / 4) {
+        let r = (a % (PI / 2) < 0.1) ? size * 0.6 : size * 0.4;
+        let x = cos(a) * r;
+        let y = sin(a) * r;
+        vertex(x, y);
+    }
+    endShape(CLOSE);
+}
+
+function brighten(color) {
+    let c = color(color);
+    return color(
+        min(255, red(c) * 1.2),
+        min(255, green(c) * 1.2),
+        min(255, blue(c) * 1.2)
+    );
+}
+
+function formatCollectibleName(type) {
+    return type.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
 }
 
 function checkNPCInteractions() {
@@ -420,13 +520,16 @@ function checkCollectibles() {
             c.collected = true;
             score += c.value;
             
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 20; i++) {
                 particles.push({
                     x: c.x,
                     y: c.y,
                     vx: random(-3, 3),
                     vy: random(-3, 3),
-                    life: 255
+                    size: random(3, 6),
+                    color: c.particleColor,
+                    life: 255,
+                    angle: random(TWO_PI)
                 });
             }
             
@@ -442,11 +545,16 @@ function checkCollectibles() {
         let p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.life -= 5;
+        p.vy += 0.1;
+        p.life -= 3;
         
+        push();
+        translate(p.x, p.y);
+        rotate(p.angle);
         noStroke();
-        fill(255, 200, 0, p.life);
-        circle(p.x, p.y, 5);
+        fill(p.color, p.life);
+        rect(-p.size/2, -p.size/2, p.size, p.size);
+        pop();
         
         if (p.life <= 0) {
             particles.splice(i, 1);
