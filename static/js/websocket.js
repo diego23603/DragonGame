@@ -1,70 +1,78 @@
 const socket = io();
-let currentUsername = '';
 
+// Connection handling
 socket.on('connect', () => {
     console.log('Connected to server');
-    // Load saved auth token
-    const token = localStorage.getItem('authToken');
-    if (token) {
-        socket.emit('authenticate', { token });
+    if (authToken) {
+        socket.emit('authenticate', { token: authToken });
     }
 });
 
+// Authentication response
 socket.on('authenticated', (data) => {
-    currentUsername = data.username;
-    myPosition = data.position || { x: 400, y: 300 };
-    if (data.selectedDragon) {
-        selectDragon(data.selectedDragon);
+    currentUser = {
+        username: data.username,
+        position: data.position || { x: 400, y: 300 }
+    };
+    
+    // Update position if available
+    if (data.position) {
+        myPosition = data.position;
     }
+    
+    // Trigger initial position update
+    emitPosition(myPosition.x, myPosition.y);
 });
 
+// User movement handling
 socket.on('user_moved', (data) => {
-    if (data.userId !== socket.id) {
-        const dragon = availableDragons.find(d => d.id === data.dragonId);
-        users.set(data.userId, {
-            username: data.username,
-            x: data.x,
-            y: data.y,
-            dragonSprite: dragon ? loadImage(dragon.sprite) : null
-        });
-    }
+    if (!data.userId || data.userId === socket.id) return;
+    
+    users.set(data.userId, {
+        username: data.username,
+        x: data.x,
+        y: data.y,
+        dragonSprite: data.dragonSprite
+    });
 });
 
-socket.on('dragon_selected', (data) => {
-    if (data.userId !== socket.id) {
-        const dragon = availableDragons.find(d => d.id === data.dragonId);
-        if (dragon && users.has(data.userId)) {
-            const user = users.get(data.userId);
-            loadImage(dragon.sprite, img => {
-                user.dragonSprite = img;
-                users.set(data.userId, user);
-            });
+// Disconnection handling
+socket.on('disconnect', async () => {
+    if (myPosition) {
+        try {
+            await updateUserPosition(myPosition.x, myPosition.y);
+        } catch (error) {
+            console.error('Error saving position on disconnect:', error);
         }
     }
 });
 
-socket.on('user_connected', (data) => {
-    console.log('User connected:', data);
-});
+// Position update throttling
+let lastPositionUpdate = 0;
+const POSITION_UPDATE_INTERVAL = 100; // 100ms throttle
 
-socket.on('user_disconnected', (data) => {
-    users.delete(data.userId);
-});
-
-function emitPosition(x, y, dragonId) {
+function emitPosition(x, y) {
+    const now = Date.now();
+    if (now - lastPositionUpdate < POSITION_UPDATE_INTERVAL) return;
+    
+    lastPositionUpdate = now;
+    
     if (socket && socket.connected) {
         socket.emit('position_update', {
             x,
             y,
-            dragonId,
-            username: currentUsername
+            username: currentUser?.username,
+            dragonSprite: selectedDragon?.sprite
         });
+        
+        // Also update position in database
+        updateUserPosition(x, y).catch(console.error);
     }
 }
 
-// Update keyPressed function in map.js to use the new emitPosition function
+// Update keyPressed function to use throttled position updates
 function keyPressed() {
-    const step = 10;
+    const step = 5;
     let moved = false;
     
     if (keyCode === LEFT_ARROW) {
@@ -82,6 +90,6 @@ function keyPressed() {
     }
     
     if (moved) {
-        emitPosition(myPosition.x, myPosition.y, selectedDragon?.id);
+        emitPosition(myPosition.x, myPosition.y);
     }
 }
