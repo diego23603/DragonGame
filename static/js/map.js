@@ -10,7 +10,6 @@ let fireParticles = [];
 let smokeTrails = [];
 let dragonSilhouettes = [];
 
-// Dragon-themed decorative elements
 const decorativeElements = [
     { x: 100, y: 100, type: 'castle', size: 80 },
     { x: 700, y: 500, type: 'castle', size: 80 },
@@ -23,7 +22,6 @@ function setup() {
     canvas.parent('mapContainer');
     frameRate(60);
     
-    // Initialize collectibles with dragon theme
     for (let i = 0; i < 5; i++) {
         collectibles.push({
             x: random(50, mapSize.width - 50),
@@ -36,7 +34,6 @@ function setup() {
         });
     }
     
-    // Initialize dragon silhouettes
     for (let i = 0; i < 3; i++) {
         dragonSilhouettes.push({
             x: random(width),
@@ -47,7 +44,6 @@ function setup() {
         });
     }
     
-    // Initialize default sprite if none selected
     if (!characterSprite) {
         const defaultDragon = '/static/images/dragons/red_dragon.svg';
         loadImage(defaultDragon, img => {
@@ -57,47 +53,27 @@ function setup() {
 }
 
 function draw() {
-    // Get background color from day/night cycle with warm tint
     let bgColor = getDayNightColor();
     background(color(
-        red(bgColor) * 1.2,    // Increase red component
-        green(bgColor) * 0.8,  // Reduce green
-        blue(bgColor) * 0.7    // Reduce blue
+        red(bgColor) * 1.2,
+        green(bgColor) * 0.8,
+        blue(bgColor) * 0.7
     ));
     
-    // Draw shimmering dragon scale pattern
     drawDragonScales();
-    
-    // Draw floating dragon silhouettes
     drawDragonSilhouettes();
-    
-    // Draw medieval grid pattern
     drawDragonGrid();
-    
-    // Draw decorative elements
     drawDecorativeElements();
-    
-    // Update and draw fire particles
     updateFireParticles();
-    
-    // Update and draw smoke trails
     updateSmokeTrails();
-    
-    // Draw collectibles with enhanced effects
     drawCollectibles();
     
-    // Draw all other users
     users.forEach((user, id) => {
         drawCharacter(user.x, user.y, user.dragonSprite || characterSprite);
     });
     
-    // Draw local player with smoke trail
     drawCharacter(myPosition.x, myPosition.y, characterSprite);
-    
-    // Draw score
     updateScore();
-    
-    // Check collectible collection
     checkCollectibles();
 }
 
@@ -124,7 +100,6 @@ function drawDragonSilhouettes() {
         let y = dragon.y + sin(frameCount * 0.02 + dragon.offset) * 20;
         fill(255, 100, 50, 30);
         
-        // Simple dragon silhouette
         beginShape();
         vertex(dragon.x, y);
         vertex(dragon.x + dragon.size * 0.8, y - dragon.size * 0.2);
@@ -170,7 +145,6 @@ function drawCastle(elem) {
              elem.y - elem.size - 10, 
              elem.size/6, 20);
     }
-    // Add glowing windows
     fill(255, 200, 0, 50 + sin(frameCount * 0.05) * 30);
     for(let i = 0; i < 3; i++) {
         rect(elem.x - elem.size/3 + i*elem.size/3,
@@ -184,14 +158,12 @@ function drawRunes(elem) {
     translate(elem.x, elem.y);
     rotate(frameCount * 0.01);
     
-    // Draw magical circle
     noFill();
     for(let i = 0; i < 3; i++) {
         stroke(255, 100, 50, 50 - i * 10);
         circle(0, 0, elem.size + i * 10);
     }
     
-    // Draw rune symbols
     stroke(255, 150, 50, 100);
     for(let i = 0; i < 8; i++) {
         push();
@@ -206,11 +178,9 @@ function drawDragonStatue(elem) {
     push();
     translate(elem.x, elem.y);
     
-    // Base
     fill(80, 40, 40);
     rect(-elem.size/3, -elem.size/4, elem.size*2/3, elem.size/4);
     
-    // Dragon silhouette
     fill(100, 50, 50);
     beginShape();
     vertex(0, -elem.size/2);
@@ -219,7 +189,6 @@ function drawDragonStatue(elem) {
     vertex(-elem.size/3, -elem.size*3/4);
     endShape(CLOSE);
     
-    // Glowing effect
     noFill();
     stroke(255, 100, 50, 30 + sin(frameCount * 0.05) * 20);
     circle(0, -elem.size/2, elem.size/2);
@@ -227,7 +196,6 @@ function drawDragonStatue(elem) {
 }
 
 function updateFireParticles() {
-    // Create new fire particles
     if (frameCount % 3 === 0) {
         fireParticles.push({
             x: random(width),
@@ -236,26 +204,23 @@ function updateFireParticles() {
             vy: random(-8, -4),
             size: random(5, 15),
             life: 255,
-            hue: random(0, 40)  // Warm colors
+            hue: random(0, 40)
         });
     }
     
-    // Update and draw fire particles
     for (let i = fireParticles.length - 1; i >= 0; i--) {
         let p = fireParticles[i];
         p.x += p.vx;
         p.y += p.vy;
-        p.vy *= 0.98;  // Slow down vertical movement
+        p.vy *= 0.98;
         p.life -= 4;
         p.size *= 0.98;
         
-        // Draw particle with heat distortion
         noStroke();
         let warmth = map(p.life, 0, 255, 0, 1);
         fill(p.hue + 10, 100, 50, p.life);
         circle(p.x + sin(frameCount * 0.1) * 2, p.y, p.size);
         
-        // Remove dead particles
         if (p.life <= 0) {
             fireParticles.splice(i, 1);
         }
@@ -263,7 +228,6 @@ function updateFireParticles() {
 }
 
 function updateSmokeTrails() {
-    // Add new smoke particles behind the character
     if (frameCount % 4 === 0) {
         smokeTrails.push({
             x: myPosition.x,
@@ -275,7 +239,6 @@ function updateSmokeTrails() {
         });
     }
     
-    // Update and draw smoke particles
     for (let i = smokeTrails.length - 1; i >= 0; i--) {
         let p = smokeTrails[i];
         p.x += p.vx;
@@ -297,13 +260,11 @@ function drawCollectibles() {
     collectibles.forEach((c, index) => {
         if (!c.collected) {
             push();
-            translate(c.x, c.y + sin(frameCount * 0.05 + c.floatOffset) * 5);  // Floating effect
+            translate(c.x, c.y + sin(frameCount * 0.05 + c.floatOffset) * 5);
             
-            // Draw magical rune circle
             c.runeRotation += 0.01;
             drawRuneCircle(c);
             
-            // Draw glow effect
             let glowSize = 30 + sin(frameCount * 0.05 + c.glowPhase) * 8;
             for (let i = 0; i < 3; i++) {
                 noFill();
@@ -311,7 +272,6 @@ function drawCollectibles() {
                 circle(0, 0, glowSize + i * 10);
             }
             
-            // Draw collectible based on type
             if (c.type === 'dragon_egg') {
                 drawDragonEgg();
             } else if (c.type === 'dragon_scale') {
@@ -331,7 +291,6 @@ function drawRuneCircle(collectible) {
     stroke(255, 150, 50, 50);
     circle(0, 0, 40);
     
-    // Draw rune symbols
     for (let i = 0; i < 6; i++) {
         push();
         rotate(i * TWO_PI/6);
@@ -343,11 +302,9 @@ function drawRuneCircle(collectible) {
 }
 
 function drawDragonEgg() {
-    // Egg shape
     fill(255, 200, 150);
     ellipse(0, 0, 25, 35);
     
-    // Pattern on egg
     stroke(255, 150, 50);
     noFill();
     for (let i = 0; i < 3; i++) {
@@ -357,9 +314,8 @@ function drawDragonEgg() {
 
 function drawDragonScale() {
     push();
-    rotate(sin(frameCount * 0.05) * 0.2);  // Gentle swaying
+    rotate(sin(frameCount * 0.05) * 0.2);
     
-    // Main scale
     fill(255, 150, 50);
     beginShape();
     vertex(0, -15);
@@ -368,7 +324,6 @@ function drawDragonScale() {
     vertex(-12, 0);
     endShape(CLOSE);
     
-    // Iridescent effect
     noFill();
     stroke(255, 200, 150, 100);
     beginShape();
@@ -381,19 +336,15 @@ function drawDragonScale() {
 }
 
 function drawDragonChest() {
-    // Main chest
     fill(139, 69, 19);
     rect(-15, -12, 30, 24);
     
-    // Lid
     fill(101, 67, 33);
     rect(-15, -12, 30, 8);
     
-    // Gold trim
     fill(255, 215, 0);
     rect(-16, -4, 32, 2);
     
-    // Lock
     fill(218, 165, 32);
     rect(-2, -8, 4, 8);
 }
@@ -404,7 +355,6 @@ function checkCollectibles() {
             c.collected = true;
             score += 10;
             
-            // Create collection effect particles
             for (let i = 0; i < 20; i++) {
                 particles.push({
                     x: c.x,
@@ -416,7 +366,6 @@ function checkCollectibles() {
                 });
             }
             
-            // Emit collectible collection to server
             if (socket) {
                 socket.emit('collectible_collected', {
                     x: c.x,
@@ -426,7 +375,6 @@ function checkCollectibles() {
         }
     });
     
-    // Update collection effect particles
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx;
@@ -449,25 +397,20 @@ function drawCharacter(x, y, dragonSprite = characterSprite) {
         push();
         imageMode(CENTER);
         
-        // Add heat distortion effect
         drawingContext.filter = 'url(#heat-distortion)';
         
-        // Add glowing effect
         noFill();
         for (let i = 0; i < 3; i++) {
             stroke(255, 100, 100, (30 - i*10) + sin(frameCount * 0.1) * 20);
             circle(x, y, 40 + i*10);
         }
         
-        // Draw dragon shadow
         noStroke();
         fill(0, 0, 0, 30);
         ellipse(x, y + 24, 40, 20);
         
-        // Draw dragon sprite
         image(dragonSprite, x, y, 48, 48);
         
-        // Reset filter
         drawingContext.filter = 'none';
         pop();
     }
@@ -484,6 +427,11 @@ function updateScore() {
 function keyPressed() {
     const step = 5;
     let moved = false;
+    
+    if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW || 
+        keyCode === UP_ARROW || keyCode === DOWN_ARROW) {
+        event.preventDefault();
+    }
     
     if (keyCode === LEFT_ARROW) {
         myPosition.x = max(24, myPosition.x - step);
