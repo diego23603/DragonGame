@@ -22,6 +22,9 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 db.init_app(app)
 socketio.init_app(app)
 
+# Store collectible states
+collectibles_state = {}
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -29,6 +32,8 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     emit('user_connected', {'data': 'Connected'})
+    # Send current collectibles state to new user
+    emit('collectibles_state', collectibles_state)
 
 @socketio.on('position_update')
 def handle_position_update(data):
@@ -46,6 +51,18 @@ def handle_position_update(data):
     
     # Broadcast position to all other users
     emit('user_moved', data, broadcast=True, include_self=False)
+
+@socketio.on('collectible_collected')
+def handle_collectible_collected(data):
+    # Create a unique identifier for the collectible
+    collectible_id = f"{data['x']}_{data['y']}"
+    collectibles_state[collectible_id] = True
+    
+    # Broadcast to all clients that this collectible was collected
+    emit('collectible_collected', {
+        'x': data['x'],
+        'y': data['y']
+    }, broadcast=True)
 
 with app.app_context():
     import models
