@@ -1,0 +1,17 @@
+#mapContainer {
+    width: 800px;
+    height: 600px;
+    margin: 0 auto;
+    border: 1px solid var(--bs-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.time-display {
+    font-family: monospace;
+    font-size: 1.2em;
+}
+
+canvas {
+    display: block;
+}

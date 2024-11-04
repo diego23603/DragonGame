@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual World Map</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="/static/css/styles.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">Virtual World Map</h1>
+                <div class="mb-3">
+                    <button id="toggleDayNight" class="btn btn-secondary">
+                        Toggle Day/Night Mode
+                    </button>
+                    <span id="timeDisplay" class="ms-3"></span>
+                </div>
+                <div id="mapContainer"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/daycycle.js"></script>
+    <script src="/static/js/map.js"></script>
+</body>
+</html>
