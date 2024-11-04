@@ -3,8 +3,9 @@
     --dragon-primary: #ff4d00;
     --dragon-secondary: #ffd700;
     --dragon-accent: #8b0000;
+    min-height: 100vh;
     position: relative;
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* Dragon-themed border decoration */
@@ -16,85 +17,128 @@
     overflow: hidden;
 }
 
-.map-container::before,
-.map-container::after {
-    content: '';
+/* Dragon-themed collectibles */
+.collectible {
     position: absolute;
-    width: 50px;
-    height: 50px;
-    background-image: url('/static/images/dragons/corner-dragon.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    z-index: 1;
+    transition: all 0.3s ease;
 }
 
-.map-container::before {
-    top: -5px;
-    left: -5px;
-    transform: rotate(0deg);
+.dragon-egg {
+    width: 30px;
+    height: 40px;
+    background: linear-gradient(135deg, #ffd700, #ff6b6b);
+    border-radius: 50% / 60% 60% 40% 40%;
+    box-shadow: inset -5px -5px 15px rgba(0,0,0,0.3);
+    animation: pulse 2s infinite;
 }
 
-.map-container::after {
-    bottom: -5px;
-    right: -5px;
-    transform: rotate(180deg);
+.dragon-scale {
+    width: 30px;
+    height: 35px;
+    background: linear-gradient(135deg, #4a90e2, #1e3c72);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    animation: shimmer 3s infinite;
 }
 
-/* Enhanced chat container with dragon theme */
+.magic-crystal {
+    width: 30px;
+    height: 45px;
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    clip-path: polygon(50% 0%, 80% 25%, 100% 60%, 80% 90%, 50% 100%, 20% 90%, 0% 60%, 20% 25%);
+    animation: glow 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shimmer {
+    0% { filter: brightness(1) saturate(1); }
+    50% { filter: brightness(1.3) saturate(1.5); }
+    100% { filter: brightness(1) saturate(1); }
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 5px #9c27b0; }
+    50% { box-shadow: 0 0 20px #9c27b0; }
+    100% { box-shadow: 0 0 5px #9c27b0; }
+}
+
+/* Collection animations */
+.collect-animation {
+    position: absolute;
+    pointer-events: none;
+    animation: collect 0.5s forwards;
+}
+
+@keyframes collect {
+    0% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+    100% { 
+        transform: scale(2); 
+        opacity: 0; 
+    }
+}
+
+/* Map container and chat styles */
 .chat-container {
     border: 2px solid var(--dragon-primary);
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(139, 0, 0, 0.3));
     box-shadow: 0 0 15px rgba(255, 77, 0, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
-.chat-message {
-    border-left: 3px solid var(--dragon-primary);
-    background: linear-gradient(90deg, rgba(255, 77, 0, 0.1), transparent);
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
 }
 
-/* Dragon selection enhancements */
+.chat-input-container {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+/* Dragon selection container */
 .dragon-selection-container {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(139, 0, 0, 0.4));
     border: 2px solid var(--dragon-secondary);
     border-radius: 15px;
     padding: 20px;
     margin-bottom: 30px;
-    position: relative;
-    overflow: hidden;
 }
 
-.dragon-selection-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        radial-gradient(
-            circle at 30% 30%,
-            rgba(255, 77, 0, 0.1) 0%,
-            transparent 60%
-        ),
-        radial-gradient(
-            circle at 70% 70%,
-            rgba(255, 215, 0, 0.1) 0%,
-            transparent 60%
-        );
-    pointer-events: none;
-}
-
-/* Score display enhancement */
+/* Score display */
 .score-display {
     background: linear-gradient(135deg, var(--dragon-accent), transparent);
     border-radius: 10px;
     padding: 10px 20px;
-    font-family: 'Press Start 2P', sans-serif;
     color: var(--dragon-secondary);
     text-shadow: 0 0 10px rgba(255, 77, 0, 0.5);
-    position: relative;
-    overflow: hidden;
 }
 
-/* Add rest of the existing styles here */
-[Previous CSS content...]
+/* Time display */
+.time-display {
+    font-family: 'Press Start 2P', monospace;
+    color: var(--dragon-secondary);
+    text-shadow: 0 0 10px rgba(255, 77, 0, 0.5);
+}
+
+/* Weather display */
+.weather-display {
+    font-family: 'Press Start 2P', monospace;
+    color: var(--dragon-primary);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
