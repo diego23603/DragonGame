@@ -9,6 +9,8 @@ let particles = [];
 let fireParticles = [];
 let smokeTrails = [];
 let dragonSilhouettes = [];
+let lastPosition = { x: 400, y: 300 };
+let username = '';
 
 const decorativeElements = [
     { x: 100, y: 100, type: 'castle', size: 80 },
@@ -24,13 +26,15 @@ function setup() {
     
     for (let i = 0; i < 5; i++) {
         collectibles.push({
+            id: `collectible_${i}`,
             x: random(50, mapSize.width - 50),
             y: random(50, mapSize.height - 50),
             collected: false,
             type: random(['dragon_egg', 'dragon_scale', 'dragon_chest']),
             glowPhase: random(TWO_PI),
             floatOffset: random(TWO_PI),
-            runeRotation: 0
+            runeRotation: 0,
+            collectedBy: null
         });
     }
     
@@ -68,13 +72,23 @@ function draw() {
     updateSmokeTrails();
     drawCollectibles();
     
+    myPosition.x = lerp(lastPosition.x, myPosition.x, 0.3);
+    myPosition.y = lerp(lastPosition.y, myPosition.y, 0.3);
+    
     users.forEach((user, id) => {
+        const dist = calculateDistance(myPosition, user);
+        if (dist < 100) {
+            drawInteractionEffect(user.x, user.y);
+        }
         drawCharacter(user.x, user.y, user.dragonSprite || characterSprite);
+        drawPlayerName(user.x, user.y - 30, user.username || 'Player');
     });
     
     drawCharacter(myPosition.x, myPosition.y, characterSprite);
+    drawPlayerName(myPosition.x, myPosition.y - 30, username || 'You');
     updateScore();
     checkCollectibles();
+    checkPlayerCollisions();
 }
 
 function drawDragonScales() {
@@ -349,33 +363,91 @@ function drawDragonChest() {
     rect(-2, -8, 4, 8);
 }
 
+function drawPlayerName(x, y, name) {
+    push();
+    fill(255);
+    textAlign(CENTER);
+    textSize(12);
+    text(name, x, y);
+    pop();
+}
+
+function drawInteractionEffect(x, y) {
+    push();
+    noFill();
+    stroke(255, 150, 50, 100);
+    let pulseSize = 50 + sin(frameCount * 0.1) * 10;
+    circle(x, y, pulseSize);
+    pop();
+}
+
+function calculateDistance(pos1, pos2) {
+    return dist(pos1.x, pos1.y, pos2.x, pos2.y);
+}
+
+function checkPlayerCollisions() {
+    users.forEach((user, id) => {
+        const distance = calculateDistance(myPosition, user);
+        if (distance < 50) {
+            createCollisionEffect(
+                (myPosition.x + user.x) / 2,
+                (myPosition.y + user.y) / 2
+            );
+        }
+    });
+}
+
+function createCollisionEffect(x, y) {
+    for (let i = 0; i < 10; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: random(-2, 2),
+            vy: random(-2, 2),
+            life: 255,
+            color: color(255, 200, 50)
+        });
+    }
+}
+
 function checkCollectibles() {
     collectibles.forEach((c, index) => {
         if (!c.collected && dist(myPosition.x, myPosition.y, c.x, c.y) < 30) {
             c.collected = true;
+            c.collectedBy = username;
             score += 10;
             document.getElementById('currentScore').textContent = score;
             
-            for (let i = 0; i < 20; i++) {
-                particles.push({
-                    x: c.x,
-                    y: c.y,
-                    vx: random(-3, 3),
-                    vy: random(-3, 3),
-                    life: 255,
-                    color: color(255, 200, 50)
-                });
-            }
+            createCollectionEffect(c.x, c.y);
             
             if (socket) {
                 socket.emit('collectible_collected', {
+                    id: c.id,
                     x: c.x,
-                    y: c.y
+                    y: c.y,
+                    collectedBy: username
                 });
             }
         }
     });
     
+    updateParticles();
+}
+
+function createCollectionEffect(x, y) {
+    for (let i = 0; i < 20; i++) {
+        particles.push({
+            x: x,
+            y: y,
+            vx: random(-3, 3),
+            vy: random(-3, 3),
+            life: 255,
+            color: color(255, 200, 50)
+        });
+    }
+}
+
+function updateParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx;
@@ -428,6 +500,7 @@ function updateScore() {
 function keyPressed() {
     const step = 10;
     let moved = false;
+    lastPosition = { ...myPosition };
     
     if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW || 
         keyCode === UP_ARROW || keyCode === DOWN_ARROW) {
@@ -452,7 +525,12 @@ function keyPressed() {
         socket.emit('position_update', {
             x: myPosition.x,
             y: myPosition.y,
-            dragonId: selectedDragon?.id
+            dragonId: selectedDragon?.id,
+            username: username
         });
     }
 }
+
+window.setup = setup;
+window.draw = draw;
+window.keyPressed = keyPressed;
