@@ -1,69 +1,47 @@
 const socket = io();
 let currentUsername = '';
-let myPosition = { x: 400, y: 300 };
 
 socket.on('connect', () => {
     console.log('Connected to server');
     // Load saved auth token
     const token = localStorage.getItem('authToken');
-    const username = localStorage.getItem('username');
-    if (token && username) {
-        socket.emit('authenticate', { username });
+    if (token) {
+        socket.emit('authenticate', { token });
     }
 });
 
 socket.on('authenticated', (data) => {
     currentUsername = data.username;
-    // Use saved position or default
     myPosition = data.position || { x: 400, y: 300 };
     if (data.selectedDragon) {
-        selectDragon(availableDragons.find(d => d.id === data.selectedDragon));
+        selectDragon(data.selectedDragon);
     }
-    // Store username for persistence
-    localStorage.setItem('username', currentUsername);
 });
 
 socket.on('user_moved', (data) => {
     if (data.userId !== socket.id) {
+        const dragon = availableDragons.find(d => d.id === data.dragonId);
         users.set(data.userId, {
             username: data.username,
             x: data.x,
             y: data.y,
-            dragonId: data.dragonId
+            dragonSprite: dragon ? loadImage(dragon.sprite) : null
         });
     }
 });
 
 socket.on('dragon_selected', (data) => {
     if (data.userId !== socket.id) {
-        const user = users.get(data.userId);
-        if (user) {
-            user.dragonId = data.dragonId;
-            users.set(data.userId, user);
+        const dragon = availableDragons.find(d => d.id === data.dragonId);
+        if (dragon && users.has(data.userId)) {
+            const user = users.get(data.userId);
+            loadImage(dragon.sprite, img => {
+                user.dragonSprite = img;
+                users.set(data.userId, user);
+            });
         }
     }
 });
-
-function emitPosition(x, y, dragonId) {
-    if (socket && socket.connected && currentUsername) {
-        socket.emit('position_update', {
-            username: currentUsername,
-            x,
-            y,
-            dragonId
-        });
-    }
-}
-
-// Modified dragon selection to persist the choice
-function emitDragonSelection(dragonId) {
-    if (socket && socket.connected && currentUsername) {
-        socket.emit('dragon_selected', {
-            username: currentUsername,
-            dragonId
-        });
-    }
-}
 
 socket.on('user_connected', (data) => {
     console.log('User connected:', data);
@@ -73,6 +51,37 @@ socket.on('user_disconnected', (data) => {
     users.delete(data.userId);
 });
 
-// Export functions for use in other modules
-window.emitPosition = emitPosition;
-window.emitDragonSelection = emitDragonSelection;
+function emitPosition(x, y, dragonId) {
+    if (socket && socket.connected) {
+        socket.emit('position_update', {
+            x,
+            y,
+            dragonId,
+            username: currentUsername
+        });
+    }
+}
+
+// Update keyPressed function in map.js to use the new emitPosition function
+function keyPressed() {
+    const step = 10;
+    let moved = false;
+    
+    if (keyCode === LEFT_ARROW) {
+        myPosition.x = max(24, myPosition.x - step);
+        moved = true;
+    } else if (keyCode === RIGHT_ARROW) {
+        myPosition.x = min(mapSize.width - 24, myPosition.x + step);
+        moved = true;
+    } else if (keyCode === UP_ARROW) {
+        myPosition.y = max(24, myPosition.y - step);
+        moved = true;
+    } else if (keyCode === DOWN_ARROW) {
+        myPosition.y = min(mapSize.height - 24, myPosition.y + step);
+        moved = true;
+    }
+    
+    if (moved) {
+        emitPosition(myPosition.x, myPosition.y, selectedDragon?.id);
+    }
+}
