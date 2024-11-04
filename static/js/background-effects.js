@@ -1,6 +1,6 @@
 let dragonSilhouettes = [];
 let dragonConstellations = [];
-let particles = [];
+let emberParticles = [];
 const numSilhouettes = 3;
 const numConstellations = 5;
 
@@ -60,7 +60,7 @@ function drawBackgroundEffects() {
             const brightness = (sin(frameCount * 0.02) * 50 + point.brightness);
             fill(255, 150, 0, brightness);
             noStroke();
-            circle(point.x, point.y, 3); // Fixed: Added diameter parameter
+            circle(point.x, point.y, 3);
         });
     });
     pop();
@@ -106,7 +106,7 @@ function drawBackgroundEffects() {
     
     // Add ember particles
     if (frameCount % 10 === 0) {
-        particles.push({
+        emberParticles.push({
             x: random(width),
             y: height + 10,
             vx: random(-1, 1),
@@ -118,8 +118,8 @@ function drawBackgroundEffects() {
     }
     
     // Update and draw ember particles
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
+    for (let i = emberParticles.length - 1; i >= 0; i--) {
+        let p = emberParticles[i];
         p.x += p.vx;
         p.y += p.vy;
         p.vy *= 0.99; // Slow down vertical speed
@@ -137,7 +137,7 @@ function drawBackgroundEffects() {
         pop();
         
         if (p.life <= 0) {
-            particles.splice(i, 1);
+            emberParticles.splice(i, 1);
         }
     }
     

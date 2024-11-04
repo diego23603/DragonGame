@@ -4,19 +4,22 @@
       "id": "red_dragon",
       "name": "Red Fire Dragon",
       "sprite": "/static/images/dragons/red_dragon.svg",
-      "size": 48
+      "size": 48,
+      "description": "A powerful fire-breathing dragon"
     },
     {
       "id": "blue_dragon",
       "name": "Blue Ice Dragon",
       "sprite": "/static/images/dragons/blue_dragon.svg",
-      "size": 48
+      "size": 48,
+      "description": "A majestic ice dragon"
     },
     {
       "id": "green_dragon",
       "name": "Green Forest Dragon",
       "sprite": "/static/images/dragons/green_dragon.svg",
-      "size": 48
+      "size": 48,
+      "description": "A wise forest dragon"
     }
   ]
 }
