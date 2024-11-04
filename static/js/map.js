@@ -22,15 +22,6 @@ const NPC_TYPES = {
     }
 };
 
-function setup() {
-    const canvas = createCanvas(mapSize.width, mapSize.height);
-    canvas.parent('mapContainer');
-    frameRate(60);
-    
-    initializeNPCs();
-    initializeCollectibles();
-}
-
 function initializeNPCs() {
     const npcPositions = [
         { x: 100, y: 100, type: 'MERCHANT' },
@@ -69,6 +60,16 @@ function initializeCollectibles() {
     }
 }
 
+function setup() {
+    const canvas = createCanvas(mapSize.width, mapSize.height);
+    canvas.parent('mapContainer');
+    frameRate(60);
+    
+    initializeNPCs();
+    initializeCollectibles();
+    initBackgroundEffects();
+}
+
 function draw() {
     let bgColor = getDayNightColor();
     background(color(
@@ -76,6 +77,8 @@ function draw() {
         green(bgColor) * 0.8,
         blue(bgColor) * 0.7
     ));
+    
+    drawBackgroundEffects();
     
     updateWeather();
     applyWeatherEffects();
@@ -112,10 +115,12 @@ function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '') {
         push();
         imageMode(CENTER);
         
+        // Draw dragon shadow
         noStroke();
         fill(0, 0, 0, 30);
         ellipse(x, y + 24, 40, 20);
         
+        // Draw dragon sprite
         image(dragonSprite, x, y, 48, 48);
         
         if (playerName) {
@@ -128,25 +133,18 @@ function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '') {
 
 function drawPlayerName(x, y, name) {
     push();
-    const padding = 8;
-    const fontSize = 16;
-    textSize(fontSize);
-    const textWidth = name.length * fontSize * 0.6;
-    const bubbleWidth = textWidth + padding * 2;
-    const bubbleHeight = fontSize + padding * 2;
-    const bubbleY = y - 50;
-
-    fill(0, 0, 0, 50);
+    textAlign(CENTER);
+    textSize(14);
+    
+    // Name background
+    fill(0, 0, 0, 150);
     noStroke();
-    rect(x - bubbleWidth/2 + 2, bubbleY + 2, bubbleWidth, bubbleHeight, 10);
-
-    fill(0, 0, 0, 180);
-    rect(x - bubbleWidth/2, bubbleY, bubbleWidth, bubbleHeight, 10);
-
+    const nameWidth = textWidth(name);
+    rect(x - nameWidth/2 - 5, y - 45, nameWidth + 10, 20, 5);
+    
+    // Name text
     fill(255);
-    textAlign(CENTER, CENTER);
-    textSize(fontSize);
-    text(name, x, bubbleY + bubbleHeight/2);
+    text(name, x, y - 30);
     pop();
 }
 
@@ -156,23 +154,20 @@ function drawNPCs() {
             push();
             imageMode(CENTER);
             
+            // Draw interaction radius
             noFill();
             stroke(255, 255, 255, 50 + sin(frameCount * 0.05) * 20);
             circle(npc.x, npc.y, npc.interactionRadius * 2);
             
+            // Draw NPC
             image(npc.sprite, npc.x, npc.y, 48, 48);
             
-            const labelY = npc.y - 35;
-            textSize(14);
-            const labelWidth = textWidth(npc.type);
-            
-            fill(0, 0, 0, 180);
-            noStroke();
-            rect(npc.x - labelWidth/2 - 5, labelY - 10, labelWidth + 10, 20, 5);
-            
-            fill(255);
+            // Draw NPC type label
             textAlign(CENTER);
-            text(npc.type, npc.x, labelY);
+            textSize(12);
+            fill(0, 0, 0, 150);
+            noStroke();
+            text(npc.type, npc.x, npc.y - 35);
             
             pop();
         }
@@ -185,62 +180,28 @@ function drawCollectibles() {
             push();
             translate(c.x, c.y);
             
+            // Pulsing effect
             let pulseSize = 20 + sin(frameCount * 0.05 + c.pulsePhase) * 5;
             
+            // Glow effect
             noFill();
             for (let i = 0; i < 3; i++) {
                 stroke(255, 200, 0, 50 - i * 15);
                 circle(0, 0, pulseSize + i * 10);
             }
             
+            // Draw collectible
             fill(255, 200, 0);
             noStroke();
             circle(0, 0, pulseSize);
             
+            // Label
             textAlign(CENTER);
             textSize(12);
-            const labelY = pulseSize + 15;
-            const labelWidth = textWidth(c.type);
-            
-            fill(0, 0, 0, 180);
-            noStroke();
-            rect(-labelWidth/2 - 5, labelY - 10, labelWidth + 10, 20, 5);
-            
             fill(255);
-            text(c.type, 0, labelY + 5);
+            text(c.type, 0, pulseSize + 15);
             
             pop();
-        }
-    });
-}
-
-function checkNPCInteractions() {
-    npcs.forEach(npc => {
-        const d = dist(myPosition.x, myPosition.y, npc.x, npc.y);
-        if (d < npc.interactionRadius) {
-            npc.messageOpacity = min(npc.messageOpacity + 15, 255);
-            
-            if (npc.messageOpacity > 0) {
-                push();
-                const fontSize = 16;
-                textSize(fontSize);
-                const messageWidth = textWidth(npc.message);
-                const padding = 10;
-                const bubbleWidth = messageWidth + padding * 2;
-                const bubbleHeight = fontSize + padding * 2;
-                const bubbleY = npc.y - 70;
-
-                fill(0, 0, 0, npc.messageOpacity * 0.7);
-                noStroke();
-                rect(npc.x - bubbleWidth/2, bubbleY, bubbleWidth, bubbleHeight, 10);
-
-                fill(255, npc.messageOpacity);
-                textAlign(CENTER, CENTER);
-                text(npc.message, npc.x, bubbleY + bubbleHeight/2);
-                pop();
-            }
-        } else {
-            npc.messageOpacity = max(npc.messageOpacity - 10, 0);
         }
     });
 }
@@ -251,38 +212,44 @@ function checkCollectibles() {
             c.collected = true;
             score += c.value;
             
+            // Create collection effect particles
             for (let i = 0; i < 10; i++) {
                 particles.push({
                     x: c.x,
                     y: c.y,
                     vx: random(-3, 3),
                     vy: random(-3, 3),
-                    life: 255
+                    life: 255,
+                    color: color(255, 200, 0)
                 });
             }
             
             document.getElementById('currentScore').textContent = score;
-            
-            if (socket) {
-                socket.emit('collectible_collected', { x: c.x, y: c.y });
-            }
         }
     });
-    
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 5;
-        
-        noStroke();
-        fill(255, 200, 0, p.life);
-        circle(p.x, p.y, 5);
-        
-        if (p.life <= 0) {
-            particles.splice(i, 1);
+}
+
+function checkNPCInteractions() {
+    npcs.forEach(npc => {
+        const d = dist(myPosition.x, myPosition.y, npc.x, npc.y);
+        if (d < npc.interactionRadius) {
+            // Show message with fade in
+            npc.messageOpacity = min(npc.messageOpacity + 15, 255);
+            
+            if (npc.messageOpacity > 0) {
+                push();
+                fill(0, 0, 0, npc.messageOpacity * 0.7);
+                noStroke();
+                textAlign(CENTER);
+                textSize(14);
+                text(npc.message, npc.x, npc.y - 60);
+                pop();
+            }
+        } else {
+            // Fade out message
+            npc.messageOpacity = max(npc.messageOpacity - 10, 0);
         }
-    }
+    });
 }
 
 function updateScore() {
@@ -293,29 +260,11 @@ function updateScore() {
     text(`Score: ${score}`, 10, 10);
 }
 
-function keyPressed() {
-    const step = 5;
-    let moved = false;
-    
-    if (keyCode === LEFT_ARROW) {
-        myPosition.x = max(24, myPosition.x - step);
-        moved = true;
-    } else if (keyCode === RIGHT_ARROW) {
-        myPosition.x = min(mapSize.width - 24, myPosition.x + step);
-        moved = true;
-    } else if (keyCode === UP_ARROW) {
-        myPosition.y = max(24, myPosition.y - step);
-        moved = true;
-    } else if (keyCode === DOWN_ARROW) {
-        myPosition.y = min(mapSize.height - 24, myPosition.y + step);
-        moved = true;
-    }
-    
-    if (moved && socket) {
-        socket.emit('position_update', {
-            x: myPosition.x,
-            y: myPosition.y,
-            dragonId: selectedDragon?.id
+// Initialize characters when the document is ready
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof socket !== 'undefined') {
+        socket.on('connect', () => {
+            console.log('Connected to server');
         });
     }
-}
+});
