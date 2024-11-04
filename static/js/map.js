@@ -5,6 +5,37 @@ let characterSprite;
 let collectibles = [];
 let npcs = [];
 let score = 0;
+let particles = [];
+
+// Particle Class for special effects
+class Particle {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.alpha = 1;
+        this.size = random(3, 8);
+        this.speedX = random(-1, 1);
+        this.speedY = random(-1, 1);
+        this.color = color(255, 215, 0);
+    }
+
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.alpha -= 0.02;
+    }
+
+    draw() {
+        if (this.alpha > 0) {
+            push();
+            noStroke();
+            this.color.setAlpha(this.alpha * 255);
+            fill(this.color);
+            circle(this.x, this.y, this.size);
+            pop();
+        }
+    }
+}
 
 // NPC Class
 class NPC {
@@ -13,6 +44,7 @@ class NPC {
         this.y = y;
         this.direction = Math.random() * Math.PI * 2;
         this.speed = 1;
+        this.particleTimer = 0;
     }
 
     update() {
@@ -24,6 +56,13 @@ class NPC {
         // Keep NPCs within bounds
         this.x = Math.max(16, Math.min(mapSize.width - 16, this.x));
         this.y = Math.max(16, Math.min(mapSize.height - 16, this.y));
+
+        // Add particle effect trail
+        this.particleTimer++;
+        if (this.particleTimer > 10) {
+            particles.push(new Particle(this.x, this.y));
+            this.particleTimer = 0;
+        }
     }
 }
 
@@ -35,18 +74,30 @@ class Collectible {
         this.collected = false;
         this.pulseSize = 0;
         this.pulseDirection = 1;
+        this.particleTimer = 0;
     }
 
     update() {
-        // Pulsing animation
-        this.pulseSize += 0.1 * this.pulseDirection;
-        if (this.pulseSize > 1) this.pulseDirection = -1;
-        if (this.pulseSize < 0) this.pulseDirection = 1;
+        if (!this.collected) {
+            // Pulsing animation
+            this.pulseSize += 0.1 * this.pulseDirection;
+            if (this.pulseSize > 1) this.pulseDirection = -1;
+            if (this.pulseSize < 0) this.pulseDirection = 1;
+
+            // Add sparkle particles
+            this.particleTimer++;
+            if (this.particleTimer > 30) {
+                particles.push(new Particle(
+                    this.x + random(-10, 10),
+                    this.y + random(-10, 10)
+                ));
+                this.particleTimer = 0;
+            }
+        }
     }
 }
 
 function preload() {
-    // Load the sprite before setup
     characterSprite = loadImage('/static/images/character_sprite.svg');
 }
 
@@ -72,12 +123,23 @@ function setup() {
 }
 
 function draw() {
-    // Get background color from day/night cycle
+    // Get background color from day/night cycle and apply dragon theme
     let bgColor = getDayNightColor();
-    background(red(bgColor), green(bgColor), blue(bgColor));
+    let r = red(bgColor);
+    let g = green(bgColor);
+    let b = blue(bgColor);
+    // Add a slight reddish tint for dragon theme
+    background(r + 20, g * 0.8, b * 0.8);
     
-    // Draw grid for better visibility
+    // Draw grid with dragon theme
     drawGrid();
+    
+    // Update and draw particles
+    particles = particles.filter(p => p.alpha > 0);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
     
     // Update and draw NPCs
     npcs.forEach(npc => {
@@ -95,6 +157,10 @@ function draw() {
             if (dist(myPosition.x, myPosition.y, collectible.x, collectible.y) < 20) {
                 collectible.collected = true;
                 score += 10;
+                // Add collection effect
+                for (let i = 0; i < 10; i++) {
+                    particles.push(new Particle(collectible.x, collectible.y));
+                }
                 if (socket) {
                     socket.emit('collectible_collected', {
                         x: collectible.x,
@@ -113,15 +179,15 @@ function draw() {
     // Draw local player
     drawCharacter(myPosition.x, myPosition.y);
     
-    // Draw score
-    fill(255);
+    // Draw score with dragon theme
+    fill(255, 215, 0);
     noStroke();
     textSize(16);
     text(`Score: ${score}`, 10, 20);
 }
 
 function drawGrid() {
-    stroke(100, 100, 100, 50);
+    stroke(255, 100, 100, 30);
     strokeWeight(1);
     
     // Draw vertical lines
@@ -137,20 +203,28 @@ function drawGrid() {
 
 function drawNPC(x, y) {
     push();
-    fill(200, 100, 100);
-    stroke(150, 50, 50);
+    fill(200, 50, 50);
+    stroke(255, 100, 100);
     strokeWeight(2);
     circle(x, y, 24);
+    // Add glowing effect
+    noFill();
+    stroke(255, 100, 100, 100);
+    circle(x, y, 28 + sin(frameCount * 0.1) * 4);
     pop();
 }
 
 function drawCollectible(collectible) {
     push();
-    fill(255, 215, 0, 200); // Golden color
+    fill(255, 215, 0, 200);
     stroke(255, 200, 0);
     strokeWeight(2);
     let size = 12 + collectible.pulseSize * 4;
     star(collectible.x, collectible.y, size/2, size, 5);
+    // Add glowing effect
+    noFill();
+    stroke(255, 215, 0, 100);
+    star(collectible.x, collectible.y, size/2 + 2, size + 2, 5);
     pop();
 }
 
@@ -199,6 +273,10 @@ function drawCharacter(x, y) {
     if (characterSprite) {
         push();
         imageMode(CENTER);
+        // Add glowing effect
+        noFill();
+        stroke(255, 100, 100, 50 + sin(frameCount * 0.1) * 30);
+        circle(x, y, 40);
         image(characterSprite, x, y, 32, 32);
         pop();
     }
