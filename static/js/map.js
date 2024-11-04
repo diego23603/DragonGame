@@ -7,6 +7,33 @@ let npcs = [];
 let score = 0;
 let particles = [];
 
+const MAP_ZONES = {
+    FOREST: {
+        color: '#2d5a27',
+        gridColor: '#1a4a14',
+        bounds: { x1: 0, y1: 0, x2: 400, y2: 300 },
+        name: 'Mystical Forest'
+    },
+    DESERT: {
+        color: '#c2b280',
+        gridColor: '#8b7355',
+        bounds: { x1: 400, y1: 0, x2: 800, y2: 300 },
+        name: 'Dragon\'s Desert'
+    },
+    MOUNTAINS: {
+        color: '#4a4a4a',
+        gridColor: '#363636',
+        bounds: { x1: 0, y1: 300, x2: 400, y2: 600 },
+        name: 'Dragon Peak Mountains'
+    },
+    LAKE: {
+        color: '#4a90e2',
+        gridColor: '#357abd',
+        bounds: { x1: 400, y1: 300, x2: 800, y2: 600 },
+        name: 'Crystal Lake'
+    }
+};
+
 const NPC_TYPES = {
     MERCHANT: {
         sprite: '/static/images/dragons/green_dragon.svg',
@@ -69,6 +96,35 @@ function initializeCollectibles() {
     }
 }
 
+function getCurrentZone(x, y) {
+    for (const [zoneName, zone] of Object.entries(MAP_ZONES)) {
+        if (x >= zone.bounds.x1 && x < zone.bounds.x2 &&
+            y >= zone.bounds.y1 && y < zone.bounds.y2) {
+            return { name: zoneName, ...zone };
+        }
+    }
+    return null;
+}
+
+function drawZones() {
+    for (const [zoneName, zone] of Object.entries(MAP_ZONES)) {
+        push();
+        fill(zone.color);
+        noStroke();
+        rect(zone.bounds.x1, zone.bounds.y1, 
+             zone.bounds.x2 - zone.bounds.x1, 
+             zone.bounds.y2 - zone.bounds.y1);
+        
+        textAlign(CENTER, CENTER);
+        textSize(16);
+        fill(255, 255, 255, 150);
+        text(zone.name, 
+             (zone.bounds.x1 + zone.bounds.x2) / 2,
+             (zone.bounds.y1 + zone.bounds.y2) / 2);
+        pop();
+    }
+}
+
 function draw() {
     let bgColor = getDayNightColor();
     background(color(
@@ -80,9 +136,20 @@ function draw() {
     updateWeather();
     applyWeatherEffects();
     
+    drawZones();
     drawGrid();
     drawNPCs();
     drawCollectibles();
+    
+    const currentZone = getCurrentZone(myPosition.x, myPosition.y);
+    if (currentZone) {
+        push();
+        fill(255);
+        textAlign(LEFT, TOP);
+        textSize(16);
+        text(`Current Zone: ${currentZone.name}`, 10, 40);
+        pop();
+    }
     
     users.forEach((user, id) => {
         drawCharacter(user.x, user.y, user.dragonSprite, user.username);
@@ -97,13 +164,20 @@ function draw() {
 }
 
 function drawGrid() {
-    stroke(255, 255, 255, 20);
+    const currentZone = getCurrentZone(myPosition.x, myPosition.y);
+    if (!currentZone) return;
+
+    stroke(currentZone.gridColor);
     strokeWeight(1);
+    
     for (let x = 0; x < width; x += 50) {
-        line(x, 0, x, height);
+        line(x, Math.max(currentZone.bounds.y1, 0),
+             x, Math.min(currentZone.bounds.y2, height));
     }
+    
     for (let y = 0; y < height; y += 50) {
-        line(0, y, width, y);
+        line(Math.max(currentZone.bounds.x1, 0), y,
+             Math.min(currentZone.bounds.x2, width), y);
     }
 }
 
