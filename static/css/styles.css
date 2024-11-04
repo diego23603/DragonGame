@@ -1,215 +1,93 @@
-/* Dragon Theme Base Styles */
-:root {
-    --dragon-primary: #ff652f;
-    --dragon-secondary: #ffb703;
-    --dragon-accent: #ff5722;
-    --dragon-glow: rgba(255, 100, 100, 0.5);
-}
+/* Existing styles... */
 
-body.dragon-themed {
-    background: radial-gradient(circle, #1e3c72, #2a5298);
-    font-family: 'Press Start 2P', sans-serif;
-    color: var(--bs-light);
-    position: relative;
-    min-height: 100vh;
-}
-
-/* Animated Background Effect */
-body.dragon-themed::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('data:image/svg+xml,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M20 0L40 20L20 40L0 20Z" fill="%23ff652f" opacity="0.1"/></svg>') repeat;
-    opacity: 0.1;
-    z-index: -1;
-    animation: movePattern 20s linear infinite;
-}
-
-@keyframes movePattern {
-    0% { background-position: 0 0; }
-    100% { background-position: 100px 100px; }
-}
-
-/* Game Title */
-.game-title {
-    color: var(--dragon-primary);
-    text-shadow: 0 0 20px var(--dragon-glow);
-    font-size: 2.5em;
-    margin-bottom: 1em;
-    animation: glowPulse 2s infinite;
-}
-
-@keyframes glowPulse {
-    0% { text-shadow: 0 0 20px var(--dragon-glow); }
-    50% { text-shadow: 0 0 40px var(--dragon-glow); }
-    100% { text-shadow: 0 0 20px var(--dragon-glow); }
-}
-
-/* Map Container */
-.map-container {
-    width: 800px;
+/* Enhanced Chat Interface Styles */
+.chat-container {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #4a90e2;
+    border-radius: 15px;
     height: 600px;
-    margin: 20px auto;
-    border: 3px solid var(--dragon-primary);
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 0 30px var(--dragon-glow);
-    position: relative;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(5px);
-}
-
-/* Dragon Selection */
-.dragon-selection-container {
-    background: rgba(0, 0, 0, 0.4);
-    padding: 20px;
-    border-radius: 15px;
-    border: 2px solid var(--dragon-secondary);
-    box-shadow: 0 0 20px var(--dragon-glow);
-    margin-bottom: 20px;
-}
-
-.selection-title {
-    color: var(--dragon-secondary);
-    text-shadow: 0 0 10px var(--dragon-glow);
-    margin-bottom: 1em;
-}
-
-.dragon-option {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
     padding: 15px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
 }
 
-.dragon-option::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, var(--dragon-glow) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
+.chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
 }
 
-.dragon-option:hover::before {
+.chat-message {
+    margin-bottom: 15px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    word-wrap: break-word;
+    transition: opacity 0.3s ease;
+}
+
+.chat-message.nearby {
+    background: rgba(74, 144, 226, 0.2);
+    border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.chat-message.far {
     opacity: 0.5;
 }
 
-.dragon-name {
-    color: var(--bs-light);
-    margin-top: 8px;
-    font-size: 14px;
-    text-shadow: 0 0 5px var(--dragon-glow);
-}
-
-/* Score Display */
-.score-display {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 1.2em;
-    color: var(--dragon-secondary);
-    margin-top: 15px;
-    text-shadow: 0 0 10px var(--dragon-glow);
-    animation: scoreGlow 2s infinite;
-}
-
-@keyframes scoreGlow {
-    0% { text-shadow: 0 0 10px var(--dragon-glow); }
-    50% { text-shadow: 0 0 20px var(--dragon-glow); }
-    100% { text-shadow: 0 0 10px var(--dragon-glow); }
-}
-
-/* Time Display */
-.time-controls {
+.chat-input-container {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1em;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.time-display {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 1.2em;
-    color: var(--dragon-secondary);
-    text-shadow: 0 0 10px var(--dragon-glow);
-    animation: timeGlow 2s infinite alternate;
+#chatInput {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a90e2;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
-@keyframes timeGlow {
-    0% { text-shadow: 0 0 5px var(--dragon-glow); }
-    100% { text-shadow: 0 0 15px var(--dragon-glow); }
+#chatInput:focus {
+    outline: none;
+    border-color: #66b0ff;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
 }
 
-/* Button Styles */
-.btn {
-    background: linear-gradient(135deg, var(--dragon-primary), var(--dragon-secondary));
+#sendMessage {
+    background: #4a90e2;
     border: none;
     color: white;
-    padding: 0.5em 1em;
+    padding: 10px;
     border-radius: 8px;
+    cursor: pointer;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
 }
 
-.btn:hover {
+#sendMessage:hover {
+    background: #66b0ff;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--dragon-glow);
 }
 
-.btn::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s;
+.message-timestamp {
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 8px;
 }
 
-.btn:hover::after {
-    opacity: 1;
+.message-sender {
+    font-weight: bold;
+    color: #4a90e2;
+    margin-right: 8px;
 }
 
-/* Canvas Styling */
-canvas {
-    display: block;
-    margin: 0 auto;
-    border-radius: 15px;
-    box-shadow: 0 0 30px var(--dragon-glow);
-}
-
-/* Collectibles Animation */
-@keyframes float {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0); }
-}
-
-.collectible {
-    animation: float 2s ease-in-out infinite;
-}
-
-/* Dragon Scale Pattern */
-.dragon-scale-pattern {
-    background-image: 
-        repeating-linear-gradient(
-            45deg,
-            var(--dragon-primary) 25%,
-            transparent 25%,
-            transparent 75%,
-            var(--dragon-primary) 75%,
-            var(--dragon-primary)
-        );
-    background-size: 20px 20px;
-    opacity: 0.1;
+.message-content {
+    margin-top: 5px;
+    color: rgba(255, 255, 255, 0.9);
 }

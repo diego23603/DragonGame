@@ -52,7 +52,8 @@ function initializeNPCs() {
                 type: pos.type,
                 message: npcType.message,
                 interactionRadius: 60,
-                lastInteraction: 0
+                lastInteraction: 0,
+                messageOpacity: 0 // Add opacity for fade effect
             });
         });
     });
@@ -135,11 +136,29 @@ function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '') {
 
 function drawPlayerName(x, y, name) {
     push();
-    fill(255);
+    // Draw message bubble background
+    const padding = 8;
+    const fontSize = 16;
+    textSize(fontSize);
+    const textWidth = name.length * fontSize * 0.6; // Approximate width
+    const bubbleWidth = textWidth + padding * 2;
+    const bubbleHeight = fontSize + padding * 2;
+    const bubbleY = y - 50; // Position above character
+
+    // Draw bubble shadow
+    fill(0, 0, 0, 50);
     noStroke();
-    textSize(14);
-    textAlign(CENTER);
-    text(name, x, y - 40);
+    rect(x - bubbleWidth/2 + 2, bubbleY + 2, bubbleWidth, bubbleHeight, 10);
+
+    // Draw bubble background
+    fill(0, 0, 0, 180);
+    rect(x - bubbleWidth/2, bubbleY, bubbleWidth, bubbleHeight, 10);
+
+    // Draw text
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(fontSize);
+    text(name, x, bubbleY + bubbleHeight/2);
     pop();
 }
 
@@ -157,12 +176,20 @@ function drawNPCs() {
             // Draw NPC
             image(npc.sprite, npc.x, npc.y, 48, 48);
             
-            // Draw type label
-            fill(255);
+            // Draw type label with improved visibility
+            const labelY = npc.y - 35;
+            textSize(14);
+            const labelWidth = textWidth(npc.type);
+            
+            // Draw label background
+            fill(0, 0, 0, 180);
             noStroke();
+            rect(npc.x - labelWidth/2 - 5, labelY - 10, labelWidth + 10, 20, 5);
+            
+            // Draw label text
+            fill(255);
             textAlign(CENTER);
-            textSize(12);
-            text(npc.type, npc.x, npc.y - 35);
+            text(npc.type, npc.x, labelY);
             
             pop();
         }
@@ -190,12 +217,20 @@ function drawCollectibles() {
             noStroke();
             circle(0, 0, pulseSize);
             
-            // Draw type label
-            fill(255);
-            noStroke();
+            // Draw type label with improved visibility
             textAlign(CENTER);
-            textSize(10);
-            text(c.type, 0, pulseSize + 15);
+            textSize(12);
+            const labelY = pulseSize + 15;
+            const labelWidth = textWidth(c.type);
+            
+            // Draw label background
+            fill(0, 0, 0, 180);
+            noStroke();
+            rect(-labelWidth/2 - 5, labelY - 10, labelWidth + 10, 20, 5);
+            
+            // Draw label text
+            fill(255);
+            text(c.type, 0, labelY + 5);
             
             pop();
         }
@@ -206,19 +241,34 @@ function checkNPCInteractions() {
     npcs.forEach(npc => {
         const d = dist(myPosition.x, myPosition.y, npc.x, npc.y);
         if (d < npc.interactionRadius) {
-            // Only show message every 3 seconds
-            if (millis() - npc.lastInteraction > 3000) {
-                // Display message above NPC
+            // Fade in message
+            npc.messageOpacity = min(npc.messageOpacity + 15, 255);
+            
+            // Display message above NPC with improved styling
+            if (npc.messageOpacity > 0) {
                 push();
-                fill(255);
+                const fontSize = 16;
+                textSize(fontSize);
+                const messageWidth = textWidth(npc.message);
+                const padding = 10;
+                const bubbleWidth = messageWidth + padding * 2;
+                const bubbleHeight = fontSize + padding * 2;
+                const bubbleY = npc.y - 70;
+
+                // Draw message bubble background with fade effect
+                fill(0, 0, 0, npc.messageOpacity * 0.7);
                 noStroke();
-                textAlign(CENTER);
-                textSize(12);
-                text(npc.message, npc.x, npc.y - 50);
+                rect(npc.x - bubbleWidth/2, bubbleY, bubbleWidth, bubbleHeight, 10);
+
+                // Draw text with fade effect
+                fill(255, npc.messageOpacity);
+                textAlign(CENTER, CENTER);
+                text(npc.message, npc.x, bubbleY + bubbleHeight/2);
                 pop();
-                
-                npc.lastInteraction = millis();
             }
+        } else {
+            // Fade out message when out of range
+            npc.messageOpacity = max(npc.messageOpacity - 10, 0);
         }
     });
 }

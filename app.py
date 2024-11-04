@@ -54,6 +54,15 @@ def handle_dragon_selected(data):
         'dragonId': data['dragonId']
     }, broadcast=True)
 
+@socketio.on('chat_message')
+def handle_chat_message(data):
+    sid = request.sid
+    emit('chat_message', {
+        'sender': data['sender'],
+        'message': data['message'],
+        'position': data['position']
+    }, broadcast=True)
+
 @socketio.on('collectible_collected')
 def handle_collectible_collected(data):
     collectible_id = f"{data['x']}_{data['y']}"
