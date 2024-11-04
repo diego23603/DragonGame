@@ -1,161 +1,93 @@
-/* Custom Variables */
-:root {
-    --dragon-primary: var(--bs-warning);
-    --dragon-secondary: var(--bs-info);
-    --game-font: 'Press Start 2P', sans-serif;
-    --castle-glow: 0 0 50px rgba(255, 100, 0, 0.3);
-}
+/* Existing styles... */
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: var(--game-font);
-    background: radial-gradient(circle at center, #1a0f2e 0%, #0d0718 100%);
-    color: var(--bs-light);
-    min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
-}
-
-/* Animated Background Overlay */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 200%;
-    height: 200%;
-    background: 
-        radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%),
-        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 30l15-15L60 30 45 45 30 30zm0 0L15 45L0 30l15-15 15 15zm0 0l15 15L30 60 15 45l15-15zm0 0L15 15L30 0l15 15-15 15z' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E");
-    animation: bgScroll 60s linear infinite;
-    opacity: 0.15;
-    z-index: -1;
-    pointer-events: none;
-}
-
-@keyframes bgScroll {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(-50%, -50%); }
-}
-
-/* Game Container */
-#mapContainer {
-    position: relative;
+/* Enhanced Chat Interface Styles */
+.chat-container {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #4a90e2;
     border-radius: 15px;
-    box-shadow: 0 0 30px rgba(255, 100, 0, 0.2);
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    overflow: hidden;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
 }
 
-#mapContainer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255,100,0,0.1) 0%, transparent 100%);
-    pointer-events: none;
-}
-
-/* Dragon Selection */
-.dragon-option {
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.dragon-option:hover {
-    transform: scale(1.1);
-}
-
-.dragon-sprite {
-    filter: drop-shadow(0 0 10px rgba(255, 100, 0, 0.5));
-    transition: all 0.3s ease;
-}
-
-.dragon-sprite.selected {
-    filter: drop-shadow(0 0 20px var(--dragon-primary));
-    transform: scale(1.1);
-}
-
-/* Chat Interface */
 .chat-messages {
-    height: 400px;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    margin-bottom: 15px;
     background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 100, 0, 0.2);
-    border-radius: var(--bs-border-radius);
+    border-radius: 12px;
 }
 
 .chat-message {
-    margin-bottom: 0.75rem;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: var(--bs-border-radius);
-    border-left: 3px solid var(--dragon-secondary);
-    transition: all 0.3s ease;
-}
-
-.chat-message:hover {
+    margin-bottom: 15px;
+    padding: 12px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
+    word-wrap: break-word;
+    transition: opacity 0.3s ease;
 }
 
-/* Score Display */
-#scoreBoard {
-    font-family: var(--game-font);
-    color: var(--dragon-primary);
-    text-shadow: 0 0 10px var(--dragon-primary);
+.chat-message.nearby {
+    background: rgba(74, 144, 226, 0.2);
+    border: 1px solid rgba(74, 144, 226, 0.3);
 }
 
-/* Particle Effects */
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
+.chat-message.far {
+    opacity: 0.5;
 }
 
-@keyframes glow {
-    0% { filter: brightness(1); }
-    50% { filter: brightness(1.3); }
-    100% { filter: brightness(1); }
+.chat-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-/* Responsive Adjustments */
-@media (max-width: 992px) {
-    .chat-messages {
-        height: 300px;
-    }
-    
-    .game-title {
-        font-size: 1.5rem;
-    }
+#chatInput {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a90e2;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
-/* Custom Button Styles */
-.btn-dragon {
-    background: linear-gradient(135deg, var(--dragon-primary), var(--bs-danger));
+#chatInput:focus {
+    outline: none;
+    border-color: #66b0ff;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.3);
+}
+
+#sendMessage {
+    background: #4a90e2;
     border: none;
-    color: var(--bs-light);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.btn-dragon:hover {
+#sendMessage:hover {
+    background: #66b0ff;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255,100,0,0.3);
 }
 
-/* Custom Card Styles */
-.card {
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,100,0,0.2);
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+.message-timestamp {
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 8px;
 }
 
-.card-header {
-    border-bottom: 1px solid rgba(255,100,0,0.2);
-    background: rgba(255,100,0,0.1);
+.message-sender {
+    font-weight: bold;
+    color: #4a90e2;
+    margin-right: 8px;
+}
+
+.message-content {
+    margin-top: 5px;
+    color: rgba(255, 255, 255, 0.9);
 }

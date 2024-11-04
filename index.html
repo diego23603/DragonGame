@@ -1,94 +1,101 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dragon World</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link href="/static/css/styles.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Dragones</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div class="container-fluid py-4">
-        <!-- Auth Section -->
-        <div id="authSection" class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="text-center mb-4">
-                    <h1 class="game-title display-4">Dragon World</h1>
-                    <p class="lead text-secondary">Enter the realm of dragons</p>
-                </div>
-                
-                <div class="card bg-dark border-primary mb-4">
-                    <div class="card-header bg-primary bg-opacity-25">
-                        <h2 class="h5 mb-0">Login</h2>
-                    </div>
-                    <div class="card-body">
-                        <form id="loginForm" class="needs-validation" novalidate>
-                            <div class="mb-3">
-                                <label for="loginUsername" class="form-label">Username</label>
-                                <input type="text" class="form-control bg-dark" id="loginUsername" required
-                                       minlength="3" pattern="[a-zA-Z0-9]+" data-original-text="Login">
-                                <div class="invalid-feedback">Username must be at least 3 characters</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="loginPassword" class="form-label">Password</label>
-                                <input type="password" class="form-control bg-dark" id="loginPassword" required
-                                       minlength="6">
-                                <div class="invalid-feedback">Password must be at least 6 characters</div>
-                            </div>
-                            <button type="submit" class="btn btn-dragon w-100">Enter Dragon World</button>
-                            <div id="loginError" class="alert alert-danger mt-3" style="display: none;"></div>
-                        </form>
-                    </div>
-                </div>
+<div id="mainContainer">
+  <h1>Dragon Game</h1>
 
-                <div class="card bg-dark border-warning">
-                    <div class="card-header bg-warning bg-opacity-25">
-                        <h2 class="h5 mb-0">Register</h2>
-                    </div>
-                    <div class="card-body">
-                        <form id="registerForm" class="needs-validation" novalidate>
-                            <div class="mb-3">
-                                <label for="registerUsername" class="form-label">Choose Username</label>
-                                <input type="text" class="form-control bg-dark" id="registerUsername" required
-                                       minlength="3" pattern="[a-zA-Z0-9]+" data-original-text="Register">
-                                <div class="invalid-feedback">Username must be at least 3 characters</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="registerPassword" class="form-label">Choose Password</label>
-                                <input type="password" class="form-control bg-dark" id="registerPassword" required
-                                       minlength="6">
-                                <div class="invalid-feedback">Password must be at least 6 characters</div>
-                            </div>
-                            <button type="submit" class="btn btn-dragon w-100">Create Account</button>
-                            <div id="registerError" class="alert alert-danger mt-3" style="display: none;"></div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div id="accessibilityControls">
+    <button id="toggleAudio">Activar narración</button>
+    <button id="increaseFontSize">Aumentar texto</button>
+  </div>
 
-        <!-- Game Section -->
-        <div id="gameSection" style="display: none;">
-            <button id="logoutButton" class="btn btn-outline-danger position-absolute top-0 end-0 m-3">
-                Logout
-            </button>
-            
-            <div id="mapContainer"></div>
-        </div>
+  <div id="authSection" role="region" aria-label="Autenticación">
+    <h2 id="registerHeader">Registro</h2>
+    <form id="registerForm">
+      <label for="registerUsername">Nombre de usuario:</label>
+      <input type="text" id="registerUsername" required>
+      <label for="registerPassword">Contraseña:</label>
+      <input type="password" id="registerPassword" required>
+      <button type="submit">Registrarse</button>
+    </form>
+    <div id="registerError" role="alert"></div>
+
+    <h2 id="loginHeader">Iniciar Sesión</h2>
+    <form id="loginForm">
+      <label for="loginUsername">Nombre de usuario:</label>
+      <input type="text" id="loginUsername" required>
+      <label for="loginPassword">Contraseña:</label>
+      <input type="password" id="loginPassword" required>
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+    <div id="loginError" role="alert"></div>
+  </div>
+
+  <div id="adminSection" style="display: none;" role="region" aria-label="Sección de administración">
+    <h2>Panel de Administración</h2>
+    <button id="loadUsersButton">Cargar Usuarios</button>
+    <button id="loadSessionsButton">Cargar Sesiones</button>
+    <ul id="userList"></ul>
+    <ul id="sessionList"></ul>
+  </div>
+
+  <div id="gameSection" style="display: none;" role="region" aria-label="Sección de juego">
+    <button id="logoutButton">Cerrar sesión</button>
+
+    <div id="dragonSelection" role="region" aria-label="Selección de dragones">
+      <h2>Dragones disponibles</h2>
+      <div id="dragonsContainer" role="list"></div>
+
+      <h3 id="addDragonHeader">Añadir un nuevo Dragón</h3>
+      <form id="addDragonForm">
+        <label for="dragonName">Nombre del Dragón:</label>
+        <input type="text" id="dragonName" required>
+        <label for="dragonSize">Tamaño del Dragón (px):</label>
+        <input type="number" id="dragonSize" required>
+        <label for="dragonImage">Imagen del Dragón (URL):</label>
+        <input type="url" id="dragonImage" required>
+        <button type="submit">Añadir Dragón</button>
+      </form>
+
+      <h3 id="editDragonHeader">Modificar Dragón Seleccionado</h3>
+      <form id="editDragonForm" style="display: none;">
+        <label for="editDragonName">Nombre del Dragón:</label>
+        <input type="text" id="editDragonName" required>
+        <label for="editDragonSize">Tamaño del Dragón (px):</label>
+        <input type="number" id="editDragonSize" required>
+        <label for="editDragonImage">Imagen del Dragón (URL):</label>
+        <input type="url" id="editDragonImage" required>
+        <button type="submit">Actualizar Dragón</button>
+      </form>
+      <button id="deleteDragonButton">Eliminar Dragón</button>
     </div>
 
-    <!-- Load dependencies first -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js" defer></script>
+    <button id="playButton">Jugar</button>
 
-    <!-- Load auth.js first -->
-    <script src="/static/js/auth.js" defer></script>
+    <div id="selectedDragon" role="status" aria-live="polite"></div>
+  </div>
+</div>
 
-    <!-- Load other scripts after auth -->
-    <script src="/static/js/websocket.js" defer></script>
-    <script src="/static/js/map.js" defer></script>
-    <script src="/static/js/dragons.js" defer></script>
-    <script src="/static/js/chat.js" defer></script>
+<div id="screenReaderAnnouncement" class="sr-only" aria-live="polite"></div>
+<!-- Añadir después de la sección del juego en index.html -->
+<div id="mapSection" style="display: none;" role="region" aria-label="Mapa del mundo">
+  <h2>Mapa del Mundo</h2>
+  <div id="mapViewer"></div>
+</div>
+
+<!-- Añadir botón para ver el mapa en la sección de juego -->
+<button id="viewMapButton" onclick="toggleMap()" aria-label="Ver mapa del mundo">
+  Ver mapa
+</button>
+<canvas id="gameCanvas"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+<script src="/menu.js"></script>
 </body>
 </html>

@@ -1,147 +1,70 @@
-// Socket instance and connection state
-let socket = null;
-let isConnecting = false;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 5;
-const RECONNECT_DELAY = 2000;
+const socket = io();
+let currentUsername = '';
 
-// Socket initialization and connection management
-function initializeSocket() {
-    if (isConnecting || socket?.connected) return;
-    isConnecting = true;
+socket.on('connect', () => {
+    console.log('Connected to server');
+    // Load saved auth token
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        socket.emit('authenticate', { token });
+    }
+});
 
-    try {
-        const authToken = window.getAuthToken?.();
-        if (!authToken) {
-            console.log('Auth token not available, waiting...');
-            isConnecting = false;
-            return;
-        }
+socket.on('authenticated', (data) => {
+    currentUsername = data.username;
+    myPosition = data.position || { x: 400, y: 300 };
+    if (data.selectedDragon) {
+        selectDragon(data.selectedDragon);
+    }
+});
 
-        socket = io({
-            reconnection: true,
-            reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
-            reconnectionDelay: RECONNECT_DELAY,
-            auth: { token: authToken }
+socket.on('user_moved', (data) => {
+    if (data.userId !== socket.id) {
+        const dragon = availableDragons.find(d => d.id === data.dragonId);
+        users.set(data.userId, {
+            username: data.username,
+            x: data.x,
+            y: data.y,
+            dragonSprite: dragon ? loadImage(dragon.sprite) : null
         });
-
-        setupSocketListeners();
-    } catch (error) {
-        console.error('Socket initialization error:', error);
-        handleReconnection();
     }
-}
+});
 
-function setupSocketListeners() {
-    if (!socket) return;
-
-    socket.on('connect', () => {
-        console.log('Connected to server');
-        isConnecting = false;
-        reconnectAttempts = 0;
-        const authToken = window.getAuthToken?.();
-        if (authToken) {
-            socket.emit('authenticate', { token: authToken });
-        }
-        // Dispatch event for other modules
-        document.dispatchEvent(new Event('socketConnected'));
-    });
-
-    socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        handleReconnection();
-    });
-
-    socket.on('disconnect', async () => {
-        console.log('Disconnected from server');
-        handleDisconnect();
-    });
-
-    socket.on('authenticated', (data) => {
-        handleAuthentication(data);
-    });
-
-    socket.on('user_moved', (data) => {
-        handleUserMovement(data);
-    });
-}
-
-function handleReconnection() {
-    isConnecting = false;
-    if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-        reconnectAttempts++;
-        console.log(`Reconnection attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
-        setTimeout(initializeSocket, RECONNECT_DELAY);
-    } else {
-        console.error('Max reconnection attempts reached');
-    }
-}
-
-async function handleDisconnect() {
-    const currentUser = window.getCurrentUser?.();
-    if (currentUser?.position) {
-        try {
-            await updateUserPosition(currentUser.position.x, currentUser.position.y);
-        } catch (error) {
-            console.error('Error saving position on disconnect:', error.message || 'Unknown error');
+socket.on('dragon_selected', (data) => {
+    if (data.userId !== socket.id) {
+        const dragon = availableDragons.find(d => d.id === data.dragonId);
+        if (dragon && users.has(data.userId)) {
+            const user = users.get(data.userId);
+            loadImage(dragon.sprite, img => {
+                user.dragonSprite = img;
+                users.set(data.userId, user);
+            });
         }
     }
-    isConnecting = false;
-}
+});
 
-function handleAuthentication(data) {
-    const currentUser = window.getCurrentUser?.();
-    if (!currentUser) return;
+socket.on('user_connected', (data) => {
+    console.log('User connected:', data);
+});
 
-    currentUser.position = data.position || { x: 400, y: 300 };
-    if (data.position) {
-        myPosition = data.position;
+socket.on('user_disconnected', (data) => {
+    users.delete(data.userId);
+});
+
+function emitPosition(x, y, dragonId) {
+    if (socket && socket.connected) {
+        socket.emit('position_update', {
+            x,
+            y,
+            dragonId,
+            username: currentUsername
+        });
     }
-    emitPosition(myPosition.x, myPosition.y);
 }
 
-function handleUserMovement(data) {
-    if (!socket || !data.userId || data.userId === socket.id) return;
-    
-    users.set(data.userId, {
-        username: data.username,
-        x: data.x,
-        y: data.y,
-        dragonSprite: data.dragonSprite
-    });
-}
-
-// Position update throttling
-let lastPositionUpdate = 0;
-const POSITION_UPDATE_INTERVAL = 100;
-
-function emitPosition(x, y) {
-    if (!socket?.connected) return;
-
-    const now = Date.now();
-    if (now - lastPositionUpdate < POSITION_UPDATE_INTERVAL) return;
-    
-    lastPositionUpdate = now;
-    
-    const currentUser = window.getCurrentUser?.();
-    if (!currentUser) return;
-
-    socket.emit('position_update', {
-        x,
-        y,
-        username: currentUser.username,
-        dragonSprite: selectedDragon?.sprite
-    });
-    
-    updateUserPosition(x, y).catch(error => {
-        console.error('Error updating position:', error.message || 'Unknown error');
-    });
-}
-
+// Update keyPressed function in map.js to use the new emitPosition function
 function keyPressed() {
-    if (!socket?.connected) return;
-
-    const step = 5;
+    const step = 10;
     let moved = false;
     
     if (keyCode === LEFT_ARROW) {
@@ -159,23 +82,6 @@ function keyPressed() {
     }
     
     if (moved) {
-        emitPosition(myPosition.x, myPosition.y);
+        emitPosition(myPosition.x, myPosition.y, selectedDragon?.id);
     }
 }
-
-// Initialize socket when auth is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for auth.js to initialize
-    setTimeout(initializeSocket, 1000);
-});
-
-document.addEventListener('authStateChanged', () => {
-    if (!socket?.connected) {
-        initializeSocket();
-    } else {
-        const authToken = window.getAuthToken?.();
-        if (authToken) {
-            socket.emit('authenticate', { token: authToken });
-        }
-    }
-});
