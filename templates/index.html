@@ -7,18 +7,26 @@
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link href="/static/css/styles.css" rel="stylesheet">
-    <!-- Move p5.js before our custom scripts -->
+    <!-- Load p5.js and Socket.IO before custom scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body class="dragon-themed">
     <div class="container">
-        <!-- Auth Section -->
-        <div id="authSection" class="row justify-content-center">
-            <!-- Previous auth content -->
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="position-fixed top-50 start-50 translate-middle text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="loading-text">Loading Dragon World...</div>
         </div>
 
-        <!-- Game Section (Initially Hidden) -->
+        <!-- Auth Section -->
+        <div id="authSection" class="row justify-content-center" style="display: none;">
+            <!-- Auth content will be dynamically loaded -->
+        </div>
+
+        <!-- Game Section -->
         <div id="gameSection" class="row" style="display: none;">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,19 +45,33 @@
                     <div id="dragonOptions" class="d-flex justify-content-center gap-4"></div>
                 </div>
 
-                <div id="mapContainer" class="dragon-themed map-container"></div>
+                <!-- Game Canvas Container -->
+                <div id="mapContainer" class="dragon-themed map-container">
+                    <!-- p5.js canvas will be inserted here -->
+                </div>
+                
+                <!-- Score Display -->
                 <div id="scoreBoard" class="mt-3 score-display">
                     Score: <span id="currentScore">0</span>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Load our custom scripts after p5.js -->
+
+    <!-- Load custom scripts after p5.js -->
     <script src="/static/js/auth.js"></script>
     <script src="/static/js/websocket.js"></script>
     <script src="/static/js/daycycle.js"></script>
     <script src="/static/js/dragons.js"></script>
     <script src="/static/js/map.js"></script>
+
+    <script>
+        // Hide loading indicator when everything is loaded
+        window.addEventListener('load', () => {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            // Show auth section by default
+            document.getElementById('authSection').style.display = 'block';
+        });
+    </script>
 </body>
 </html>
