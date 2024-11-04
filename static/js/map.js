@@ -1,121 +1,151 @@
-[Previous map.js content up to line 508]
+// Global state variables with proper declarations
+let users = new Map();
+let myPosition = { x: 400, y: 300 };
+let lastPosition = { x: 400, y: 300 };
+let mapSize = { width: 800, height: 600 };
+let characterSprite = null;
+let collectibles = [];
+let score = 0;
+let particles = [];
+let fireParticles = [];
+let smokeTrails = [];
+let dragonSilhouettes = [];
+let isMovementEnabled = false;
 
-// Handle keyboard input with improved error handling and feedback
-function keyPressed() {
-    // Check connection status first
-    if (!window.socket?.connected) {
-        showMovementFeedback('error', 'Not connected to server');
-        return;
-    }
+// Asset loading in preload
+function preload() {
+    // Load default sprite
+    loadImage('/static/images/dragons/red_dragon.svg', img => {
+        characterSprite = img;
+    }, error => {
+        console.error('Failed to load default sprite:', error);
+    });
+}
 
-    if (!characterSprite) {
-        showMovementFeedback('error', 'Character not loaded');
-        return;
-    }
+// Helper functions
+function calculateDistance(pos1, pos2) {
+    return dist(pos1.x, pos1.y, pos2.x, pos2.y);
+}
 
-    if (!isMovementEnabled) {
-        showMovementFeedback('error', 'Movement temporarily disabled');
-        return;
-    }
-
-    // Prevent default behavior for arrow keys first
-    if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW || 
-        keyCode === UP_ARROW || keyCode === DOWN_ARROW) {
-        event.preventDefault();
-        console.log('Prevented default arrow key behavior');
-    } else {
-        return; // Only handle arrow keys
-    }
-
-    console.log('Key pressed:', keyCode);
-    const step = 10;
-    let moved = false;
-    let blocked = false;
-    lastPosition = { ...myPosition };
-    let newPosition = { ...myPosition };
-    
-    // Calculate new position
-    switch (keyCode) {
-        case LEFT_ARROW:
-            newPosition.x = max(24, myPosition.x - step);
-            blocked = newPosition.x === 24;
-            moved = newPosition.x !== myPosition.x;
-            break;
-        case RIGHT_ARROW:
-            newPosition.x = min(mapSize.width - 24, myPosition.x + step);
-            blocked = newPosition.x === mapSize.width - 24;
-            moved = newPosition.x !== myPosition.x;
-            break;
-        case UP_ARROW:
-            newPosition.y = max(24, myPosition.y - step);
-            blocked = newPosition.y === 24;
-            moved = newPosition.y !== myPosition.y;
-            break;
-        case DOWN_ARROW:
-            newPosition.y = min(mapSize.height - 24, myPosition.y + step);
-            blocked = newPosition.y === mapSize.height - 24;
-            moved = newPosition.y !== myPosition.y;
-            break;
-    }
-    
-    // Show feedback if movement is blocked
-    if (blocked) {
-        showMovementFeedback('warning', 'Cannot move further in this direction');
-    }
-    
-    // Update position if moved
-    if (moved) {
-        myPosition = newPosition;
-        
-        // Update last known state
-        if (window.lastKnownState) {
-            window.lastKnownState.position = newPosition;
+// Initialize p5 instance and canvas
+function setup() {
+    console.log('Setting up map...');
+    try {
+        const mapContainer = document.getElementById('mapContainer');
+        if (!mapContainer) {
+            throw new Error('Map container not found!');
         }
+
+        const canvas = createCanvas(mapSize.width, mapSize.height);
+        canvas.parent('mapContainer');
+        frameRate(60);
         
-        // Emit position update
-        try {
-            console.log('Emitting position update:', myPosition);
-            window.socket.emit('position_update', {
-                x: myPosition.x,
-                y: myPosition.y,
-                dragonId: window.selectedDragon?.id,
-                username: window.username
+        // Initialize collectibles
+        initializeCollectibles();
+        initializeDragonSilhouettes();
+        
+        // WebSocket connection status handling
+        if (window.socket) {
+            window.socket.on('connect', () => {
+                console.log('WebSocket connected, enabling movement');
+                isMovementEnabled = true;
             });
-        } catch (error) {
-            console.error('Error sending position update:', error);
-            showMovementFeedback('error', 'Failed to update position');
+
+            window.socket.on('disconnect', () => {
+                console.log('WebSocket disconnected, disabling movement');
+                isMovementEnabled = false;
+            });
+        }
+    } catch (error) {
+        console.error('Error initializing canvas:', error);
+    }
+}
+
+function initializeCollectibles() {
+    // Create different types of collectibles
+    const collectibleTypes = [
+        { type: 'dragon_egg', points: 15, rarity: 0.3 },
+        { type: 'dragon_scale', points: 10, rarity: 0.5 },
+        { type: 'dragon_chest', points: 20, rarity: 0.2 }
+    ];
+
+    for (let i = 0; i < 8; i++) {
+        const type = selectCollectibleType(collectibleTypes);
+        collectibles.push({
+            id: `collectible_${i}`,
+            x: random(50, mapSize.width - 50),
+            y: random(50, mapSize.height - 50),
+            collected: false,
+            type: type.type,
+            points: type.points,
+            glowPhase: random(TWO_PI),
+            floatOffset: random(TWO_PI),
+            runeRotation: 0,
+            collectedBy: null
+        });
+    }
+}
+
+function selectCollectibleType(types) {
+    const roll = random();
+    let cumulativeProbability = 0;
+    
+    for (const type of types) {
+        cumulativeProbability += type.rarity;
+        if (roll < cumulativeProbability) {
+            return type;
         }
     }
+    return types[0]; // Default to first type if something goes wrong
 }
 
-function showMovementFeedback(type, message) {
-    const feedback = document.createElement('div');
-    feedback.className = `movement-feedback ${type}`;
-    feedback.style.position = 'fixed';
-    feedback.style.bottom = '20px';
-    feedback.style.left = '50%';
-    feedback.style.transform = 'translateX(-50%)';
-    feedback.style.padding = '10px';
-    feedback.style.borderRadius = '5px';
-    feedback.style.zIndex = '1000';
-    
-    switch(type) {
-        case 'error':
-            feedback.style.backgroundColor = 'var(--bs-danger)';
-            break;
-        case 'warning':
-            feedback.style.backgroundColor = 'var(--bs-warning)';
-            break;
-        default:
-            feedback.style.backgroundColor = 'var(--bs-info)';
+function initializeDragonSilhouettes() {
+    for (let i = 0; i < 3; i++) {
+        dragonSilhouettes.push({
+            x: random(width),
+            y: random(height),
+            size: random(100, 200),
+            speed: random(0.5, 1.5),
+            offset: random(TWO_PI)
+        });
     }
-    
-    feedback.textContent = message;
-    document.body.appendChild(feedback);
-    setTimeout(() => feedback.remove(), 2000);
 }
 
-// Export necessary functions
-window.setup = setup;
-window.draw = draw;
-window.keyPressed = keyPressed;
+// Main draw loop
+function draw() {
+    if (!isMovementEnabled) return;
+
+    let bgColor = window.getDayNightColor ? getDayNightColor() : color(30, 20, 40);
+    background(bgColor);
+    
+    // Draw map elements
+    drawDragonGrid();
+    drawDragonSilhouettes();
+    updateFireParticles();
+    drawCollectibles();
+    
+    // Smooth position updates
+    myPosition.x = lerp(lastPosition.x, myPosition.x, 0.3);
+    myPosition.y = lerp(lastPosition.y, myPosition.y, 0.3);
+    
+    // Draw other users
+    users.forEach((user, id) => {
+        const dist = calculateDistance(myPosition, user);
+        if (dist < 100) {
+            drawInteractionEffect(user.x, user.y);
+        }
+        drawCharacter(user.x, user.y, user.dragonSprite || characterSprite);
+        drawPlayerName(user.x, user.y - 30, user.username || 'Player');
+    });
+    
+    // Draw player character
+    drawCharacter(myPosition.x, myPosition.y, characterSprite);
+    drawPlayerName(myPosition.x, myPosition.y - 30, window.username || 'You');
+    
+    // Update game state
+    updateScore();
+    checkCollectibles();
+    checkPlayerCollisions();
+}
+
+[Rest of the map.js file with drawing functions and event handlers...]
