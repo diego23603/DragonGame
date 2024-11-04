@@ -7,6 +7,36 @@ let npcs = [];
 let score = 0;
 let particles = [];
 
+const ZONES = {
+    FOREST: {
+        color: '#2d5a27',
+        overlay: '#1a4a1f',
+        gridColor: 'rgba(45, 90, 39, 0.3)',
+        name: 'Mystic Forest'
+    },
+    MOUNTAINS: {
+        color: '#4a4a4a',
+        overlay: '#363636',
+        gridColor: 'rgba(74, 74, 74, 0.3)',
+        name: 'Dragon Mountains'
+    },
+    DESERT: {
+        color: '#c2b280',
+        overlay: '#a89b6a',
+        gridColor: 'rgba(194, 178, 128, 0.3)',
+        name: 'Scorched Sands'
+    },
+    LAKE: {
+        color: '#1e90ff',
+        overlay: '#0066cc',
+        gridColor: 'rgba(30, 144, 255, 0.3)',
+        name: 'Crystal Lake'
+    }
+};
+
+let zoneMap = [];
+const ZONE_SIZE = 100;
+
 const NPC_TYPES = {
     MERCHANT: {
         sprite: '/static/images/dragons/green_dragon.svg',
@@ -27,8 +57,36 @@ function setup() {
     canvas.parent('mapContainer');
     frameRate(60);
     
+    initializeZones();
     initializeNPCs();
     initializeCollectibles();
+}
+
+function initializeZones() {
+    for (let y = 0; y < mapSize.height; y += ZONE_SIZE) {
+        let row = [];
+        for (let x = 0; x < mapSize.width; x += ZONE_SIZE) {
+            if (x < mapSize.width / 2 && y < mapSize.height / 2) {
+                row.push(ZONES.FOREST);
+            } else if (x >= mapSize.width / 2 && y < mapSize.height / 2) {
+                row.push(ZONES.MOUNTAINS);
+            } else if (x < mapSize.width / 2 && y >= mapSize.height / 2) {
+                row.push(ZONES.DESERT);
+            } else {
+                row.push(ZONES.LAKE);
+            }
+        }
+        zoneMap.push(row);
+    }
+}
+
+function getCurrentZone(x, y) {
+    const zoneX = floor(x / ZONE_SIZE);
+    const zoneY = floor(y / ZONE_SIZE);
+    if (zoneY < zoneMap.length && zoneX < zoneMap[0].length) {
+        return zoneMap[zoneY][zoneX];
+    }
+    return ZONES.FOREST;
 }
 
 function initializeNPCs() {
@@ -77,12 +135,14 @@ function draw() {
         blue(bgColor) * 0.7
     ));
     
+    drawZones();
     updateWeather();
     applyWeatherEffects();
     
     drawGrid();
     drawNPCs();
     drawCollectibles();
+    drawZoneLabels();
     
     users.forEach((user, id) => {
         drawCharacter(user.x, user.y, user.dragonSprite, user.username);
@@ -94,17 +154,126 @@ function draw() {
     checkCollectibles();
     
     updateScore();
+    
+    const currentZone = getCurrentZone(myPosition.x, myPosition.y);
+    displayZoneInfo(currentZone);
+}
+
+function drawZones() {
+    for (let y = 0; y < zoneMap.length; y++) {
+        for (let x = 0; x < zoneMap[y].length; x++) {
+            const zone = zoneMap[y][x];
+            fill(zone.color);
+            noStroke();
+            rect(x * ZONE_SIZE, y * ZONE_SIZE, ZONE_SIZE, ZONE_SIZE);
+            
+            drawZoneDecorations(x * ZONE_SIZE, y * ZONE_SIZE, zone);
+        }
+    }
+}
+
+function drawZoneDecorations(x, y, zone) {
+    push();
+    noStroke();
+    
+    switch(zone) {
+        case ZONES.FOREST:
+            for (let i = 0; i < 3; i++) {
+                const treeX = x + random(20, ZONE_SIZE - 20);
+                const treeY = y + random(20, ZONE_SIZE - 20);
+                fill(zone.overlay);
+                triangle(
+                    treeX, treeY - 20,
+                    treeX - 15, treeY + 10,
+                    treeX + 15, treeY + 10
+                );
+            }
+            break;
+            
+        case ZONES.MOUNTAINS:
+            for (let i = 0; i < 2; i++) {
+                const peakX = x + random(30, ZONE_SIZE - 30);
+                const peakY = y + random(30, ZONE_SIZE - 30);
+                fill(zone.overlay);
+                triangle(
+                    peakX, peakY - 25,
+                    peakX - 20, peakY + 15,
+                    peakX + 20, peakY + 15
+                );
+            }
+            break;
+            
+        case ZONES.DESERT:
+            for (let i = 0; i < 3; i++) {
+                const duneX = x + random(20, ZONE_SIZE - 20);
+                const duneY = y + random(20, ZONE_SIZE - 20);
+                fill(zone.overlay);
+                arc(duneX, duneY, 40, 40, PI, TWO_PI);
+            }
+            break;
+            
+        case ZONES.LAKE:
+            for (let i = 0; i < 3; i++) {
+                const rippleX = x + random(20, ZONE_SIZE - 20);
+                const rippleY = y + random(20, ZONE_SIZE - 20);
+                fill(zone.overlay);
+                noFill();
+                stroke(zone.overlay);
+                strokeWeight(2);
+                circle(rippleX, rippleY, 20 + sin(frameCount * 0.05) * 5);
+            }
+            break;
+    }
+    
+    pop();
 }
 
 function drawGrid() {
-    stroke(255, 255, 255, 20);
-    strokeWeight(1);
-    for (let x = 0; x < width; x += 50) {
-        line(x, 0, x, height);
+    for (let y = 0; y < zoneMap.length; y++) {
+        for (let x = 0; x < zoneMap[y].length; x++) {
+            const zone = zoneMap[y][x];
+            stroke(zone.gridColor);
+            strokeWeight(1);
+            
+            for (let i = 0; i <= ZONE_SIZE; i += 25) {
+                line(x * ZONE_SIZE + i, y * ZONE_SIZE, x * ZONE_SIZE + i, (y + 1) * ZONE_SIZE);
+            }
+            
+            for (let i = 0; i <= ZONE_SIZE; i += 25) {
+                line(x * ZONE_SIZE, y * ZONE_SIZE + i, (x + 1) * ZONE_SIZE, y * ZONE_SIZE + i);
+            }
+        }
     }
-    for (let y = 0; y < height; y += 50) {
-        line(0, y, width, y);
+}
+
+function drawZoneLabels() {
+    textAlign(CENTER, CENTER);
+    textSize(14);
+    fill(255);
+    stroke(0);
+    strokeWeight(2);
+    
+    for (let y = 0; y < zoneMap.length; y++) {
+        for (let x = 0; x < zoneMap[y].length; x++) {
+            const zone = zoneMap[y][x];
+            const centerX = x * ZONE_SIZE + ZONE_SIZE / 2;
+            const centerY = y * ZONE_SIZE + ZONE_SIZE / 2;
+            text(zone.name, centerX, centerY);
+        }
     }
+}
+
+function displayZoneInfo(zone) {
+    push();
+    fill(0, 0, 0, 180);
+    noStroke();
+    rect(10, height - 40, 200, 30, 5);
+    
+    fill(255);
+    textAlign(LEFT, CENTER);
+    textSize(14);
+    text(zone.name, 20, height - 25);
+    pop();
 }
 
 function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '') {
