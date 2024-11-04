@@ -1,6 +1,6 @@
 let dragonSilhouettes = [];
 let castleImage;
-let particles = [];
+let backgroundParticles = [];
 let windParticles = [];
 let torchParticles = [];
 const numSilhouettes = 3;
@@ -9,6 +9,8 @@ function initBackgroundEffects() {
     // Load castle image
     loadImage('/static/images/dragons/castle.svg', img => {
         castleImage = img;
+    }, error => {
+        console.error('Error loading castle image:', error);
     });
 
     // Initialize dragon silhouettes
@@ -80,7 +82,7 @@ function drawBackgroundEffects() {
     
     // Add ember particles
     if (frameCount % 5 === 0) {
-        particles.push({
+        backgroundParticles.push({
             x: random(width),
             y: height + 10,
             vx: random(-1, 1),
@@ -133,7 +135,7 @@ function drawEnhancedDragons() {
         if (random() < 0.05) {
             let breathAngle = dragon.angle + PI;
             for (let i = 0; i < 5; i++) {
-                particles.push({
+                backgroundParticles.push({
                     x: dragon.x - cos(breathAngle) * dragon.size/2,
                     y: dragon.y - sin(breathAngle) * dragon.size/2,
                     vx: -cos(breathAngle + random(-0.2, 0.2)) * random(2, 4),
@@ -212,8 +214,8 @@ function updateTorchParticles() {
 }
 
 function updateEmberParticles() {
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
+    for (let i = backgroundParticles.length - 1; i >= 0; i--) {
+        let p = backgroundParticles[i];
         p.x += p.vx;
         p.y += p.vy;
         p.vy *= 0.99;
@@ -223,7 +225,7 @@ function updateEmberParticles() {
         circle(p.x, p.y, p.size);
         
         if (p.life <= 0) {
-            particles.splice(i, 1);
+            backgroundParticles.splice(i, 1);
         }
     }
 }
