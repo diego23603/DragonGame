@@ -3,16 +3,36 @@ let castleImage;
 let backgroundParticles = [];
 let windParticles = [];
 let torchParticles = [];
+let loadingBackground = true;
 const numSilhouettes = 3;
 
 function initBackgroundEffects() {
-    // Load castle image
-    loadImage('/static/images/dragons/castle.svg', img => {
-        castleImage = img;
-    }, error => {
-        console.error('Error loading castle image:', error);
+    return new Promise((resolve, reject) => {
+        try {
+            // Load castle image with error handling
+            loadImage(
+                '/static/images/dragons/castle.svg',
+                img => {
+                    castleImage = img;
+                    console.log('Castle image loaded successfully');
+                    initializeBackgroundElements();
+                    resolve();
+                },
+                error => {
+                    console.error('Error loading castle image:', error);
+                    // Continue without castle image
+                    initializeBackgroundElements();
+                    resolve();
+                }
+            );
+        } catch (error) {
+            console.error('Error initializing background effects:', error);
+            reject(error);
+        }
     });
+}
 
+function initializeBackgroundElements() {
     // Initialize dragon silhouettes
     for (let i = 0; i < numSilhouettes; i++) {
         dragonSilhouettes.push({
@@ -60,10 +80,16 @@ function initBackgroundEffects() {
             });
         }
     });
+
+    loadingBackground = false;
 }
 
 function drawBackgroundEffects() {
-    // Draw castle
+    if (loadingBackground) {
+        return;
+    }
+
+    // Draw castle with error handling
     if (castleImage) {
         push();
         tint(255, 150);
