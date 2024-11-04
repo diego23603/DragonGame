@@ -1,6 +1,7 @@
 let selectedDragon = null;
 let availableDragons = [];
 let loadedSprites = new Map();
+let spriteLoadingPromises = new Map();
 
 async function initializeDragons() {
     try {
@@ -28,31 +29,51 @@ async function initializeDragons() {
         renderDragonOptions();
     } catch (error) {
         console.error('Error loading dragons:', error);
-        document.getElementById('dragonOptions').innerHTML = 
-            '<div class="alert alert-danger">Failed to load dragons. Please refresh the page.</div>';
+        const container = document.getElementById('dragonOptions');
+        container.innerHTML = `
+            <div class="alert alert-danger">
+                Failed to load dragons. Please try refreshing the page.
+                Error: ${error.message}
+            </div>
+        `;
     }
 }
 
 async function loadDragonSprite(spritePath) {
+    // Return cached sprite if available
     if (loadedSprites.has(spritePath)) {
         return loadedSprites.get(spritePath);
     }
-
-    return new Promise((resolve, reject) => {
+    
+    // Return existing promise if sprite is currently loading
+    if (spriteLoadingPromises.has(spritePath)) {
+        return spriteLoadingPromises.get(spritePath);
+    }
+    
+    // Create new loading promise
+    const loadingPromise = new Promise((resolve, reject) => {
         try {
-            loadImage(spritePath, img => {
-                loadedSprites.set(spritePath, img);
-                resolve(img);
-            }, 
-            error => {
-                console.error('Error loading sprite:', spritePath, error);
-                reject(error);
-            });
+            loadImage(spritePath, 
+                img => {
+                    loadedSprites.set(spritePath, img);
+                    spriteLoadingPromises.delete(spritePath);
+                    resolve(img);
+                },
+                error => {
+                    spriteLoadingPromises.delete(spritePath);
+                    console.error('Failed to load sprite:', spritePath, error);
+                    reject(error);
+                }
+            );
         } catch (error) {
+            spriteLoadingPromises.delete(spritePath);
             console.error('Error in loadImage:', error);
             reject(error);
         }
     });
+    
+    spriteLoadingPromises.set(spritePath, loadingPromise);
+    return loadingPromise;
 }
 
 function renderDragonOptions() {
@@ -64,7 +85,7 @@ function renderDragonOptions() {
         dragonElement.className = 'dragon-option p-2 text-center';
         
         const sprite = loadedSprites.get(dragon.sprite);
-        const imgSrc = sprite ? dragon.sprite : '/static/images/dragons/red_dragon.svg'; // Fallback sprite
+        const imgSrc = sprite ? dragon.sprite : '/static/images/dragons/red_dragon.svg';
         
         dragonElement.innerHTML = `
             <div class="position-relative ${selectedDragon?.id === dragon.id ? 'selected-dragon' : ''}">
@@ -86,17 +107,59 @@ function renderDragonOptions() {
     });
 }
 
+async function selectDragon(dragon) {
+    try {
+        // Load sprite if not already loaded
+        if (!loadedSprites.has(dragon.sprite)) {
+            await loadDragonSprite(dragon.sprite);
+        }
+        
+        selectedDragon = dragon;
+        localStorage.setItem('selectedDragonId', dragon.id);
+        
+        await updateCharacterSprite(dragon.sprite);
+        renderDragonOptions();
+        
+        // Notify server about dragon selection
+        if (socket && window.authToken) {
+            socket.emit('dragon_selected', {
+                dragonId: dragon.id,
+                username: window.username
+            });
+        }
+        
+        // Show selection feedback
+        const feedback = document.createElement('div');
+        feedback.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
+        feedback.style.zIndex = '1000';
+        feedback.textContent = `Selected ${dragon.name}!`;
+        document.body.appendChild(feedback);
+        setTimeout(() => feedback.remove(), 2000);
+        
+    } catch (error) {
+        console.error('Error selecting dragon:', error);
+        const feedback = document.createElement('div');
+        feedback.className = 'alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3';
+        feedback.style.zIndex = '1000';
+        feedback.textContent = `Failed to select dragon. Please try again.`;
+        document.body.appendChild(feedback);
+        setTimeout(() => feedback.remove(), 2000);
+    }
+}
+
 async function updateCharacterSprite(spritePath) {
     try {
         const sprite = await loadDragonSprite(spritePath);
-        characterSprite = sprite;
+        window.characterSprite = sprite;
     } catch (error) {
         console.error('Error updating character sprite:', error);
         // Use default sprite if available
         if (loadedSprites.has('/static/images/dragons/red_dragon.svg')) {
-            characterSprite = loadedSprites.get('/static/images/dragons/red_dragon.svg');
+            window.characterSprite = loadedSprites.get('/static/images/dragons/red_dragon.svg');
         }
     }
 }
 
-// Rest of the file remains the same...
+// Export necessary variables and functions
+window.selectedDragon = selectedDragon;
+window.availableDragons = availableDragons;

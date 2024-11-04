@@ -7,14 +7,66 @@
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link href="/static/css/styles.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body class="dragon-themed">
     <div class="container">
-        <div class="row">
+        <!-- Auth Section -->
+        <div id="authSection" class="row justify-content-center">
+            <div class="col-md-6">
+                <h2 class="text-center mb-4">Welcome to Dragon World</h2>
+                
+                <!-- Register Form -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0">Register</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="registerForm" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="registerUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="registerUsername" required minlength="3">
+                            </div>
+                            <div class="mb-3">
+                                <label for="registerPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="registerPassword" required minlength="6">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Register</button>
+                            <div id="registerError" class="alert alert-danger mt-2 d-none"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Login Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="mb-0">Login</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="loginForm" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="loginUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="loginUsername" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="loginPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="loginPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Login</button>
+                            <div id="loginError" class="alert alert-danger mt-2 d-none"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Section (Initially Hidden) -->
+        <div id="gameSection" class="row" style="display: none;">
             <div class="col-12">
-                <h1 class="text-center mb-4 game-title">Dragon World</h1>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="game-title">Dragon World</h1>
+                    <button id="logoutBtn" class="btn btn-outline-danger">Logout</button>
+                </div>
+                
                 <div class="mb-3 time-controls">
                     <button id="toggleDayNight" class="btn btn-outline-warning">
                         Switch to Manual Mode
@@ -36,6 +88,9 @@
         </div>
     </div>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="/static/js/auth.js"></script>
     <script src="/static/js/websocket.js"></script>
     <script src="/static/js/daycycle.js"></script>
     <script src="/static/js/dragons.js"></script>
