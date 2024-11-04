@@ -7,15 +7,65 @@ let npcs = [];
 let score = 0;
 let particles = [];
 
-// Classes remain the same...
-
-function preload() {
-    // Load default dragon sprite
-    const defaultDragon = '/static/images/dragons/red_dragon.svg';
-    characterSprite = loadImage(defaultDragon);
+function setup() {
+    const canvas = createCanvas(mapSize.width, mapSize.height);
+    canvas.parent('mapContainer');
+    frameRate(60);
+    
+    // Initialize default sprite if none selected
+    if (!characterSprite) {
+        const defaultDragon = '/static/images/dragons/red_dragon.svg';
+        loadImage(defaultDragon, img => {
+            characterSprite = img;
+        });
+    }
 }
 
-// Rest of the existing functions remain the same...
+function draw() {
+    // Get background color from day/night cycle
+    let bgColor = getDayNightColor();
+    background(bgColor);
+    
+    // Draw grid
+    drawGrid();
+    
+    // Draw all other users
+    users.forEach((user, id) => {
+        drawCharacter(user.x, user.y, user.dragonSprite || characterSprite);
+    });
+    
+    // Draw local player
+    drawCharacter(myPosition.x, myPosition.y, characterSprite);
+    
+    // Draw score
+    updateScore();
+}
+
+function drawGrid() {
+    stroke(255, 255, 255, 30);
+    strokeWeight(1);
+    
+    // Draw vertical lines
+    for (let x = 0; x < width; x += 50) {
+        line(x, 0, x, height);
+    }
+    
+    // Draw horizontal lines
+    for (let y = 0; y < height; y += 50) {
+        line(0, y, width, y);
+    }
+    
+    // Draw coordinate markers
+    textSize(10);
+    fill(255, 255, 255, 100);
+    noStroke();
+    for (let x = 0; x < width; x += 100) {
+        text(x, x, 10);
+    }
+    for (let y = 0; y < height; y += 100) {
+        text(y, 5, y);
+    }
+}
 
 function drawCharacter(x, y, dragonSprite = characterSprite) {
     if (dragonSprite) {
@@ -30,18 +80,14 @@ function drawCharacter(x, y, dragonSprite = characterSprite) {
     }
 }
 
-// Update the position update emission to include dragon information
-function emitPosition() {
-    if (socket && selectedDragon) {
-        socket.emit('position_update', {
-            x: myPosition.x,
-            y: myPosition.y,
-            dragonId: selectedDragon.id
-        });
-    }
+function updateScore() {
+    fill(255);
+    noStroke();
+    textSize(16);
+    textAlign(LEFT, TOP);
+    text(`Score: ${score}`, 10, 20);
 }
 
-// Add this to the keyPressed function
 function keyPressed() {
     const step = 5;
     let moved = false;
@@ -60,7 +106,11 @@ function keyPressed() {
         moved = true;
     }
     
-    if (moved) {
-        emitPosition();
+    if (moved && socket) {
+        socket.emit('position_update', {
+            x: myPosition.x,
+            y: myPosition.y,
+            dragonId: selectedDragon?.id
+        });
     }
 }
