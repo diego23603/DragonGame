@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit
 from sqlalchemy.orm import DeclarativeBase
@@ -37,9 +37,9 @@ def handle_connect():
 
 @socketio.on('position_update')
 def handle_position_update(data):
-    user_id = request.sid
+    sid = request.sid
     emit('user_moved', {
-        'userId': user_id,
+        'userId': sid,
         'x': data['x'],
         'y': data['y'],
         'dragonId': data.get('dragonId', None)
@@ -47,10 +47,10 @@ def handle_position_update(data):
 
 @socketio.on('dragon_selected')
 def handle_dragon_selected(data):
-    user_id = request.sid
-    user_dragons[user_id] = data['dragonId']
+    sid = request.sid
+    user_dragons[sid] = data['dragonId']
     emit('dragon_selected', {
-        'userId': user_id,
+        'userId': sid,
         'dragonId': data['dragonId']
     }, broadcast=True)
 
