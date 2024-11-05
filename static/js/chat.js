@@ -3,28 +3,75 @@ const DISTANT_RANGE = 300; // Range for faded messages
 const MESSAGE_COOLDOWN = 1000; // 1 second cooldown between messages
 let lastMessageTime = 0;
 let currentNickname = '';
+let chatMinimized = false;
+let nicknameModal = null;
 
 function initChat() {
     const chatInput = document.getElementById('chatInput');
     const sendButton = document.getElementById('sendMessage');
-    const nicknameModal = new bootstrap.Modal(document.getElementById('nicknameModal'));
-    
-    // Check for saved nickname
-    currentNickname = localStorage.getItem('nickname');
-    if (!currentNickname) {
-        nicknameModal.show();
-    } else {
-        updateNicknameDisplay();
+    const chatWindow = document.getElementById('chatWindow');
+
+    // Initialize chat window dragging
+    if (typeof $ !== 'undefined') {
+        $(chatWindow).draggable({
+            handle: '.chat-header',
+            containment: 'window',
+            scroll: false
+        });
     }
+
+    // Initialize minimize/maximize functionality
+    document.querySelector('.minimize-chat').addEventListener('click', toggleChatMinimize);
+    document.querySelector('.maximize-chat').addEventListener('click', toggleChatMaximize);
+
+    // Wait for Bootstrap to load before initializing modal
+    function initializeModal() {
+        try {
+            if (typeof bootstrap !== 'undefined') {
+                nicknameModal = new bootstrap.Modal(document.getElementById('nicknameModal'), {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                
+                // Check for saved nickname
+                currentNickname = localStorage.getItem('nickname');
+                if (!currentNickname) {
+                    nicknameModal.show();
+                } else {
+                    updateNicknameDisplay();
+                }
+            } else {
+                setTimeout(initializeModal, 100);
+            }
+        } catch (error) {
+            console.error('Error initializing modal:', error);
+            // Fallback to simple prompt if modal fails
+            if (!currentNickname) {
+                currentNickname = prompt('Enter your nickname (3-15 characters):');
+                if (currentNickname) {
+                    localStorage.setItem('nickname', currentNickname);
+                    updateNicknameDisplay();
+                }
+            }
+        }
+    }
+
+    initializeModal();
 
     // Handle nickname form submission
     document.getElementById('nicknameForm').addEventListener('submit', (e) => {
         e.preventDefault();
         const nicknameInput = document.getElementById('nickname');
         currentNickname = nicknameInput.value.trim();
-        localStorage.setItem('nickname', currentNickname);
-        updateNicknameDisplay();
-        nicknameModal.hide();
+        if (currentNickname.length >= 3 && currentNickname.length <= 15) {
+            localStorage.setItem('nickname', currentNickname);
+            updateNicknameDisplay();
+            if (nicknameModal) {
+                nicknameModal.hide();
+            }
+            // Show welcome message
+            displaySystemMessage(`Welcome, ${currentNickname}! You can now chat with nearby players.`);
+        }
     });
 
     // Send message on button click
@@ -42,15 +89,43 @@ function initChat() {
     socket.on('chat_message', handleChatMessage);
 }
 
+function toggleChatMinimize() {
+    const chatBody = document.querySelector('.chat-body');
+    if (!chatMinimized) {
+        chatBody.style.display = 'none';
+        chatMinimized = true;
+    } else {
+        chatBody.style.display = 'block';
+        chatMinimized = false;
+    }
+}
+
+function toggleChatMaximize() {
+    const chatWindow = document.getElementById('chatWindow');
+    chatWindow.classList.toggle('maximized');
+}
+
 function updateNicknameDisplay() {
     const currentUser = document.getElementById('currentUser');
-    currentUser.textContent = `Chatting as: ${currentNickname}`;
+    currentUser.innerHTML = `<span class="badge bg-primary">Chatting as: ${currentNickname}</span>`;
+}
+
+function displaySystemMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageElement = document.createElement('div');
+    messageElement.className = 'chat-message system-message';
+    messageElement.innerHTML = `
+        <div class="message-content text-warning">${message}</div>
+    `;
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 function sendMessage() {
     if (!currentNickname) {
-        const nicknameModal = new bootstrap.Modal(document.getElementById('nicknameModal'));
-        nicknameModal.show();
+        if (nicknameModal) {
+            nicknameModal.show();
+        }
         return;
     }
 
@@ -71,6 +146,13 @@ function sendMessage() {
     });
     
     chatInput.value = '';
+
+    // Visual feedback for sent message
+    const sendButton = document.getElementById('sendMessage');
+    sendButton.classList.add('btn-success');
+    setTimeout(() => {
+        sendButton.classList.remove('btn-success');
+    }, 500);
 }
 
 function handleChatMessage(data) {
@@ -91,7 +173,7 @@ function handleChatMessage(data) {
     // Add sender color based on their name
     const senderColor = getColorFromString(data.sender);
     
-    // Create message content with timestamp
+    // Create message content with timestamp and animations
     const timestamp = new Date().toLocaleTimeString();
     messageElement.innerHTML = `
         <div class="message-header">
@@ -101,8 +183,19 @@ function handleChatMessage(data) {
         <div class="message-content">${formatMessage(data.message)}</div>
     `;
     
+    // Add entrance animation
+    messageElement.style.opacity = '0';
+    messageElement.style.transform = 'translateX(-20px)';
+    
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+        messageElement.style.transition = 'all 0.3s ease';
+        messageElement.style.opacity = '1';
+        messageElement.style.transform = 'translateX(0)';
+    });
     
     // Add fade-out animation for distant messages
     if (distance > CHAT_RANGE) {
