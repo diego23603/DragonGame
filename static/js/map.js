@@ -22,6 +22,53 @@ const NPC_TYPES = {
     }
 };
 
+window.addEventListener('keydown', function(e) {
+    if ([37, 38, 39, 40].includes(e.keyCode) && 
+        document.activeElement.id !== 'chatInput' &&
+        document.activeElement.tagName.toLowerCase() !== 'input') {
+        e.preventDefault();
+    }
+});
+
+function keyPressed(e) {
+    if (document.activeElement.id === 'chatInput') {
+        return;
+    }
+
+    const step = 10;
+    let moved = false;
+    
+    if (keyCode === LEFT_ARROW) {
+        myPosition.x = max(24, myPosition.x - step);
+        moved = true;
+        if (document.activeElement.id !== 'chatInput') {
+            e?.preventDefault();
+        }
+    } else if (keyCode === RIGHT_ARROW) {
+        myPosition.x = min(mapSize.width - 24, myPosition.x + step);
+        moved = true;
+        if (document.activeElement.id !== 'chatInput') {
+            e?.preventDefault();
+        }
+    } else if (keyCode === UP_ARROW) {
+        myPosition.y = max(24, myPosition.y - step);
+        moved = true;
+        if (document.activeElement.id !== 'chatInput') {
+            e?.preventDefault();
+        }
+    } else if (keyCode === DOWN_ARROW) {
+        myPosition.y = min(mapSize.height - 24, myPosition.y + step);
+        moved = true;
+        if (document.activeElement.id !== 'chatInput') {
+            e?.preventDefault();
+        }
+    }
+    
+    if (moved) {
+        emitPosition(myPosition.x, myPosition.y, selectedDragon?.id);
+    }
+}
+
 function initializeNPCs() {
     const npcPositions = [
         { x: 100, y: 100, type: 'MERCHANT' },
