@@ -4,6 +4,15 @@ let availableDragons = [];
 async function initializeDragons() {
     console.log('Initializing dragons...');
     try {
+        // Check for authentication token first
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.log('User not authenticated');
+            document.getElementById('nicknameSection').style.display = 'none';
+            showNicknameFeedback('Please login to access your nickname settings', 'warning');
+            return;
+        }
+
         const response = await fetch('/static/dragons.json');
         if (!response.ok) {
             throw new Error(`Failed to load dragons: ${response.status}`);
@@ -41,7 +50,7 @@ async function initializeDragons() {
         
         renderDragonOptions();
         
-        // Show nickname section after initialization
+        // Show nickname section only if authenticated
         document.getElementById('nicknameSection').style.display = 'block';
         
     } catch (error) {
@@ -93,13 +102,9 @@ function selectDragon(dragon) {
     selectedDragon = dragon;
     localStorage.setItem('selectedDragonId', dragon.id);
     
-    // Update character sprite
     updateCharacterSprite(dragon.sprite);
-    
-    // Update UI
     renderDragonOptions();
     
-    // Show selection feedback
     const feedbackEl = document.createElement('div');
     feedbackEl.className = 'alert alert-success position-fixed top-0 start-50 translate-middle-x mt-3';
     feedbackEl.style.zIndex = '1000';
@@ -110,7 +115,6 @@ function selectDragon(dragon) {
         feedbackEl.remove();
     }, 2000);
     
-    // Emit dragon selection to other players
     if (socket) {
         socket.emit('dragon_selected', {
             dragonId: dragon.id
@@ -136,6 +140,9 @@ function updateNickname() {
     const token = localStorage.getItem('authToken');
     if (!token) {
         showNicknameFeedback('Please login first to update your nickname', 'danger');
+        setTimeout(() => {
+            window.location.href = '/'; // Redirect to login page
+        }, 2000);
         return;
     }
     
@@ -160,6 +167,7 @@ function updateNickname() {
     })
     .then(response => {
         if (response.status === 401) {
+            localStorage.removeItem('authToken');
             throw new Error('Authentication expired. Please login again.');
         }
         if (!response.ok) {
@@ -179,8 +187,10 @@ function updateNickname() {
     .catch(error => {
         console.error('Error:', error);
         if (error.message.includes('Authentication expired')) {
-            localStorage.removeItem('authToken');
-            showNicknameFeedback(error.message, 'danger');
+            showNicknameFeedback('Your session has expired. Redirecting to login...', 'danger');
+            setTimeout(() => {
+                window.location.href = '/'; // Redirect to login page
+            }, 2000);
         } else {
             showNicknameFeedback('Error updating nickname. Please try again.', 'danger');
         }
@@ -188,20 +198,14 @@ function updateNickname() {
 }
 
 function showNicknameFeedback(message, type) {
-    const container = document.getElementById('nicknameSection');
-    const existingFeedback = container.querySelector('.alert');
-    if (existingFeedback) {
-        existingFeedback.remove();
+    const feedbackDiv = document.getElementById('nicknameFeedback');
+    feedbackDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    
+    if (type !== 'danger') {
+        setTimeout(() => {
+            feedbackDiv.innerHTML = '';
+        }, 3000);
     }
-    
-    const feedbackDiv = document.createElement('div');
-    feedbackDiv.className = `alert alert-${type} mt-2`;
-    feedbackDiv.textContent = message;
-    container.appendChild(feedbackDiv);
-    
-    setTimeout(() => {
-        feedbackDiv.remove();
-    }, 3000);
 }
 
 const style = document.createElement('style');
