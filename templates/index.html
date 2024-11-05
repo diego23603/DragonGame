@@ -12,6 +12,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body class="dragon-themed dragon-cursor">
+    <!-- Nickname Modal -->
+    <div class="modal fade" id="nicknameModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="nicknameModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title neon-text" id="nicknameModalLabel">Choose Your Nickname</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="nicknameForm">
+                        <div class="mb-3">
+                            <label for="nickname" class="form-label">Enter your nickname:</label>
+                            <input type="text" class="form-control" id="nickname" required minlength="3" maxlength="15" pattern="[A-Za-z0-9_-]+" title="Letters, numbers, underscore and hyphen only">
+                            <div class="form-text">3-15 characters, letters, numbers, underscore and hyphen only</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Start Chatting</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container crt">
         <div class="row">
             <div class="col-12">
@@ -37,6 +58,10 @@
                     <div class="col-3">
                         <!-- Chat Interface -->
                         <div class="chat-container terminal-chat">
+                            <div class="chat-header d-flex justify-content-between align-items-center p-2">
+                                <span class="chat-title">Dragon Chat</span>
+                                <span id="currentUser" class="current-user"></span>
+                            </div>
                             <div class="chat-messages" id="chatMessages"></div>
                             <div class="chat-input-container">
                                 <input type="text" id="chatInput" class="form-control" placeholder="Type a message...">

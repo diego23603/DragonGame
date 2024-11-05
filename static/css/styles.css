@@ -1,169 +1,130 @@
-/* Dragon-themed styles with retro sci-fi elements */
-.dragon-themed {
-    --dragon-primary: #ff4d00;
-    --dragon-secondary: #ffd700;
-    --dragon-accent: #8b0000;
-    min-height: 100vh;
-    position: relative;
-    overflow: auto;
-    font-family: 'Press Start 2P', monospace;
-    background: linear-gradient(135deg, #1a0f1f, #2a1f3f);
-    color: var(--dragon-secondary);
-}
+/* Add these styles to the existing styles.css file */
 
-/* Dragon-themed border decoration with retro elements */
-.map-container {
-    position: relative;
-    border: 4px solid var(--dragon-primary);
-    border-radius: 15px;
-    box-shadow: 0 0 20px rgba(255, 77, 0, 0.3);
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.8);
-}
-
-.map-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        linear-gradient(transparent 50%, rgba(0, 0, 0, 0.5) 50%),
-        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.03));
-    background-size: 100% 4px, 3px 100%;
-    pointer-events: none;
-    animation: scanline 10s linear infinite;
-    opacity: 0.2;
-}
-
-@keyframes scanline {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(100%); }
-}
-
-/* Enhanced collectibles with neon effects */
-.collectible {
-    position: absolute;
-    transition: all 0.3s ease;
-    filter: drop-shadow(0 0 10px var(--dragon-primary));
-}
-
-.dragon-egg {
-    width: 30px;
-    height: 40px;
-    background: linear-gradient(135deg, var(--dragon-secondary), var(--dragon-primary));
-    border-radius: 50% / 60% 60% 40% 40%;
-    box-shadow: 
-        inset -5px -5px 15px rgba(0,0,0,0.3),
-        0 0 20px var(--dragon-primary);
-    animation: pulse 2s infinite;
-}
-
-.dragon-scale {
-    width: 30px;
-    height: 35px;
-    background: linear-gradient(135deg, #4a90e2, #1e3c72);
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    animation: shimmer 3s infinite;
-    box-shadow: 0 0 15px #4a90e2;
-}
-
-.magic-crystal {
-    width: 30px;
-    height: 45px;
-    background: linear-gradient(135deg, #9c27b0, #673ab7);
-    clip-path: polygon(50% 0%, 80% 25%, 100% 60%, 80% 90%, 50% 100%, 20% 90%, 0% 60%, 20% 25%);
-    animation: glow 2s infinite;
-    box-shadow: 0 0 20px #9c27b0;
-}
-
-/* Retro terminal chat styles */
+/* Chat container improvements */
 .chat-container {
-    border: 2px solid var(--dragon-primary);
-    background: 
-        linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 0, 0, 0.95)),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 77, 0, 0.1) 3px, transparent 4px);
-    box-shadow: 0 0 15px rgba(255, 77, 0, 0.3);
+    border: 2px solid var(--bs-primary);
+    background: rgba(0, 0, 0, 0.9);
     border-radius: 10px;
-    padding: 15px;
-    height: 400px;
     display: flex;
     flex-direction: column;
-    font-family: 'Press Start 2P', monospace;
+    height: 600px;
+    margin: 10px;
+}
+
+.chat-header {
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid var(--bs-primary);
+    padding: 10px;
+    color: var(--bs-light);
+}
+
+.chat-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--bs-info);
+}
+
+.current-user {
+    font-size: 0.8em;
+    color: var(--bs-secondary);
 }
 
 .chat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    margin-bottom: 10px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 5px;
-    color: #33ff33;
-    text-shadow: 0 0 5px #33ff33;
-}
-
-.chat-input-container {
+    padding: 15px;
     display: flex;
-    gap: 10px;
     flex-direction: column;
+    gap: 10px;
 }
 
-.chat-input-container input {
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid var(--dragon-primary);
-    color: #33ff33;
-    padding: 8px;
-    font-family: 'Press Start 2P', monospace;
-}
-
-/* Dragon selection with retro effects */
-.dragon-selection-container {
-    background: 
-        linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(139, 0, 0, 0.6)),
-        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 77, 0, 0.1) 10px, transparent 20px);
-    border: 2px solid var(--dragon-secondary);
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 0 30px rgba(255, 77, 0, 0.2);
-}
-
-/* Score display with neon effect */
-.score-display {
-    background: linear-gradient(135deg, var(--dragon-accent), transparent);
+.chat-message {
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    padding: 10px 20px;
-    color: var(--dragon-secondary);
-    text-shadow: 
-        0 0 5px var(--dragon-secondary),
-        0 0 10px var(--dragon-primary),
-        0 0 15px var(--dragon-primary);
-    animation: scorePulse 2s infinite;
+    padding: 10px;
+    margin: 5px 0;
+    transition: opacity 0.3s ease;
 }
 
-@keyframes scorePulse {
-    0% { text-shadow: 0 0 5px var(--dragon-secondary), 0 0 10px var(--dragon-primary); }
-    50% { text-shadow: 0 0 10px var(--dragon-secondary), 0 0 20px var(--dragon-primary); }
-    100% { text-shadow: 0 0 5px var(--dragon-secondary), 0 0 10px var(--dragon-primary); }
+.chat-message.nearby {
+    border-left: 3px solid var(--bs-success);
 }
 
-/* Additional animations */
-@keyframes pulse {
-    0% { transform: scale(1); filter: brightness(1); }
-    50% { transform: scale(1.1); filter: brightness(1.2); }
-    100% { transform: scale(1); filter: brightness(1); }
+.chat-message.far {
+    border-left: 3px solid var(--bs-warning);
+    opacity: 0.7;
 }
 
-@keyframes shimmer {
-    0% { filter: brightness(1) saturate(1); }
-    50% { filter: brightness(1.3) saturate(1.5); }
-    100% { filter: brightness(1) saturate(1); }
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
 }
 
-@keyframes glow {
-    0% { filter: brightness(1); box-shadow: 0 0 5px currentColor; }
-    50% { filter: brightness(1.3); box-shadow: 0 0 20px currentColor; }
-    100% { filter: brightness(1); box-shadow: 0 0 5px currentColor; }
+.message-sender {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.message-timestamp {
+    font-size: 0.7em;
+    color: var(--bs-secondary);
+}
+
+.message-content {
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.message-content a {
+    color: var(--bs-info);
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+/* Nickname modal styling */
+.modal-content {
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--bs-primary);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--bs-primary);
+}
+
+.modal-title {
+    color: var(--bs-light);
+}
+
+#nickname {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--bs-primary);
+    color: var(--bs-light);
+}
+
+#nickname:focus {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px var(--bs-primary);
+}
+
+/* Scrollbar styling for chat */
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--bs-primary);
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-info);
 }
