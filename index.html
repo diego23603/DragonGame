@@ -1,105 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Dragones</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juego de Dragones</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
 <div id="mainContainer">
-    <h1>Dragon Game</h1>
+  <h1>Dragon Game</h1>
 
-    <div id="accessibilityControls">
-        <button id="toggleAudio">Activar narración</button>
-        <button id="increaseFontSize">Aumentar texto</button>
+  <div id="accessibilityControls">
+    <button id="toggleAudio">Activar narración</button>
+    <button id="increaseFontSize">Aumentar texto</button>
+  </div>
+
+  <div id="authSection" role="region" aria-label="Autenticación">
+    <h2 id="registerHeader">Registro</h2>
+    <form id="registerForm">
+      <label for="registerUsername">Nombre de usuario:</label>
+      <input type="text" id="registerUsername" required>
+      <label for="registerPassword">Contraseña:</label>
+      <input type="password" id="registerPassword" required>
+      <button type="submit">Registrarse</button>
+    </form>
+    <div id="registerError" role="alert"></div>
+
+    <h2 id="loginHeader">Iniciar Sesión</h2>
+    <form id="loginForm">
+      <label for="loginUsername">Nombre de usuario:</label>
+      <input type="text" id="loginUsername" required>
+      <label for="loginPassword">Contraseña:</label>
+      <input type="password" id="loginPassword" required>
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+    <div id="loginError" role="alert"></div>
+  </div>
+
+  <div id="adminSection" style="display: none;" role="region" aria-label="Sección de administración">
+    <h2>Panel de Administración</h2>
+    <button id="loadUsersButton">Cargar Usuarios</button>
+    <button id="loadSessionsButton">Cargar Sesiones</button>
+    <ul id="userList"></ul>
+    <ul id="sessionList"></ul>
+  </div>
+
+  <div id="gameSection" style="display: none;" role="region" aria-label="Sección de juego">
+    <button id="logoutButton">Cerrar sesión</button>
+
+    <div id="dragonSelection" role="region" aria-label="Selección de dragones">
+      <h2>Dragones disponibles</h2>
+      <div id="dragonsContainer" role="list"></div>
+
+      <h3 id="addDragonHeader">Añadir un nuevo Dragón</h3>
+      <form id="addDragonForm">
+        <label for="dragonName">Nombre del Dragón:</label>
+        <input type="text" id="dragonName" required>
+        <label for="dragonSize">Tamaño del Dragón (px):</label>
+        <input type="number" id="dragonSize" required>
+        <label for="dragonImage">Imagen del Dragón (URL):</label>
+        <input type="url" id="dragonImage" required>
+        <button type="submit">Añadir Dragón</button>
+      </form>
+
+      <h3 id="editDragonHeader">Modificar Dragón Seleccionado</h3>
+      <form id="editDragonForm" style="display: none;">
+        <label for="editDragonName">Nombre del Dragón:</label>
+        <input type="text" id="editDragonName" required>
+        <label for="editDragonSize">Tamaño del Dragón (px):</label>
+        <input type="number" id="editDragonSize" required>
+        <label for="editDragonImage">Imagen del Dragón (URL):</label>
+        <input type="url" id="editDragonImage" required>
+        <button type="submit">Actualizar Dragón</button>
+      </form>
+      <button id="deleteDragonButton">Eliminar Dragón</button>
     </div>
 
-    <div id="authSection" role="region" aria-label="Autenticación">
-        <h2 id="registerHeader">Registro</h2>
-        <form id="registerForm">
-            <label for="registerUsername">Nombre de usuario:</label>
-            <input type="text" id="registerUsername" required>
-            <label for="registerPassword">Contraseña:</label>
-            <input type="password" id="registerPassword" required>
-            <button type="submit">Registrarse</button>
-        </form>
-        <div id="registerError" role="alert"></div>
+    <button id="playButton">Jugar</button>
 
-        <h2 id="loginHeader">Iniciar Sesión</h2>
-        <form id="loginForm">
-            <label for="loginUsername">Nombre de usuario:</label>
-            <input type="text" id="loginUsername" required>
-            <label for="loginPassword">Contraseña:</label>
-            <input type="password" id="loginPassword" required>
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-        <div id="loginError" role="alert"></div>
-    </div>
-
-    <div id="nicknameSection" style="display: none;" class="mb-4">
-        <h3>Your Nickname</h3>
-        <div id="nicknameDisplay" class="mb-2"></div>
-        <div class="input-group">
-            <input type="text" id="nicknameInput" class="form-control" placeholder="Enter your nickname" maxlength="64">
-            <button class="btn btn-outline-secondary" type="button" onclick="updateNickname()">Update Nickname</button>
-        </div>
-    </div>
-
-    <div id="adminSection" style="display: none;" role="region" aria-label="Sección de administración">
-        <h2>Panel de Administración</h2>
-        <button id="loadUsersButton">Cargar Usuarios</button>
-        <button id="loadSessionsButton">Cargar Sesiones</button>
-        <ul id="userList"></ul>
-        <ul id="sessionList"></ul>
-    </div>
-
-    <div id="gameSection" style="display: none;" role="region" aria-label="Sección de juego">
-        <button id="logoutButton">Cerrar sesión</button>
-
-        <div id="dragonSelection" role="region" aria-label="Selección de dragones">
-            <h2>Dragones disponibles</h2>
-            <div id="dragonsContainer" role="list"></div>
-
-            <h3 id="addDragonHeader">Añadir un nuevo Dragón</h3>
-            <form id="addDragonForm">
-                <label for="dragonName">Nombre del Dragón:</label>
-                <input type="text" id="dragonName" required>
-                <label for="dragonSize">Tamaño del Dragón (px):</label>
-                <input type="number" id="dragonSize" required>
-                <label for="dragonImage">Imagen del Dragón (URL):</label>
-                <input type="url" id="dragonImage" required>
-                <button type="submit">Añadir Dragón</button>
-            </form>
-
-            <h3 id="editDragonHeader">Modificar Dragón Seleccionado</h3>
-            <form id="editDragonForm" style="display: none;">
-                <label for="editDragonName">Nombre del Dragón:</label>
-                <input type="text" id="editDragonName" required>
-                <label for="editDragonSize">Tamaño del Dragón (px):</label>
-                <input type="number" id="editDragonSize" required>
-                <label for="editDragonImage">Imagen del Dragón (URL):</label>
-                <input type="url" id="editDragonImage" required>
-                <button type="submit">Actualizar Dragón</button>
-            </form>
-            <button id="deleteDragonButton">Eliminar Dragón</button>
-        </div>
-
-        <button id="playButton">Jugar</button>
-
-        <div id="selectedDragon" role="status" aria-live="polite"></div>
-    </div>
+    <div id="selectedDragon" role="status" aria-live="polite"></div>
+  </div>
 </div>
 
 <div id="screenReaderAnnouncement" class="sr-only" aria-live="polite"></div>
+<!-- Añadir después de la sección del juego en index.html -->
 <div id="mapSection" style="display: none;" role="region" aria-label="Mapa del mundo">
-    <h2>Mapa del Mundo</h2>
-    <div id="mapViewer"></div>
+  <h2>Mapa del Mundo</h2>
+  <div id="mapViewer"></div>
 </div>
 
+<!-- Añadir botón para ver el mapa en la sección de juego -->
 <button id="viewMapButton" onclick="toggleMap()" aria-label="Ver mapa del mundo">
-    Ver mapa
+  Ver mapa
 </button>
 <canvas id="gameCanvas"></canvas>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jwt-decode/3.1.2/jwt-decode.min.js"></script>
