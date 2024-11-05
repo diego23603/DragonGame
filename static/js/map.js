@@ -93,30 +93,6 @@ function setup() {
     initBackgroundEffects();
 }
 
-function keyPressed() {
-    event.preventDefault();
-    const step = 10;
-    let moved = false;
-    
-    if (keyCode === LEFT_ARROW) {
-        myPosition.x = max(24, myPosition.x - step);
-        moved = true;
-    } else if (keyCode === RIGHT_ARROW) {
-        myPosition.x = min(mapSize.width - 24, myPosition.x + step);
-        moved = true;
-    } else if (keyCode === UP_ARROW) {
-        myPosition.y = max(24, myPosition.y - step);
-        moved = true;
-    } else if (keyCode === DOWN_ARROW) {
-        myPosition.y = min(mapSize.height - 24, myPosition.y + step);
-        moved = true;
-    }
-    
-    if (moved) {
-        emitPosition(myPosition.x, myPosition.y, selectedDragon?.id, score);
-    }
-}
-
 function draw() {
     let bgColor = getDayNightColor();
     background(color(
@@ -126,20 +102,23 @@ function draw() {
     ));
     
     drawBackgroundEffects();
+    
     updateWeather();
     applyWeatherEffects();
+    
     drawGrid();
     drawNPCs();
     drawCollectibles();
     
     users.forEach((user, id) => {
-        drawCharacter(user.x, user.y, user.dragonSprite, user.username, user.score || 0);
+        drawCharacter(user.x, user.y, user.dragonSprite, user.username);
     });
     
-    drawCharacter(myPosition.x, myPosition.y, characterSprite, 'You', score);
+    drawCharacter(myPosition.x, myPosition.y, characterSprite, 'You');
     
     checkNPCInteractions();
     checkCollectibles();
+    
     updateScore();
 }
 
@@ -154,7 +133,7 @@ function drawGrid() {
     }
 }
 
-function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '', playerScore = 0) {
+function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '') {
     if (dragonSprite) {
         push();
         imageMode(CENTER);
@@ -166,25 +145,25 @@ function drawCharacter(x, y, dragonSprite = characterSprite, playerName = '', pl
         image(dragonSprite, x, y, 48, 48);
         
         if (playerName) {
-            drawPlayerName(x, y, playerName, playerScore);
+            drawPlayerName(x, y, playerName);
         }
         
         pop();
     }
 }
 
-function drawPlayerName(x, y, name, playerScore = 0) {
+function drawPlayerName(x, y, name) {
     push();
     textAlign(CENTER);
     textSize(14);
     
     fill(0, 0, 0, 150);
     noStroke();
-    const nameWidth = textWidth(name + ` (${playerScore})`);
+    const nameWidth = textWidth(name);
     rect(x - nameWidth/2 - 5, y - 45, nameWidth + 10, 20, 5);
     
     fill(255);
-    text(`${name} (${playerScore})`, x, y - 30);
+    text(name, x, y - 30);
     pop();
 }
 

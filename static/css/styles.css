@@ -1,86 +1,182 @@
-/* Chat Container Styles */
+/* Chat container improvements */
 .chat-container {
-    width: 25%;
-    min-width: 300px;
-    height: 80vh;
-    position: fixed;
-    right: 20px;
-    top: 20px;
-    background: rgba(33, 37, 41, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--bs-primary);
-    border-radius: 8px;
+    border: 2px solid var(--bs-primary);
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
+    height: 600px;
+    margin: 10px;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 300px;
     z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.chat-container.maximized {
+    width: 500px;
+    height: 80vh;
 }
 
 .chat-header {
-    padding: 1rem;
-    background: rgba(33, 37, 41, 0.95);
-    border-bottom: 1px solid var(--bs-primary);
+    background: rgba(0, 0, 0, 0.8);
+    border-bottom: 2px solid var(--bs-primary);
+    padding: 10px;
+    color: var(--bs-light);
     cursor: move;
+    user-select: none;
+}
+
+.chat-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.chat-controls button {
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.chat-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--bs-info);
 }
 
 .chat-body {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    flex-grow: 1;
+}
+
+.current-user {
+    font-size: 0.8em;
+    padding: 8px;
+    text-align: center;
 }
 
 .chat-messages {
-    flex: 1;
+    flex-grow: 1;
     overflow-y: auto;
-    padding: 1rem;
-    scroll-behavior: smooth;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .chat-message {
-    background: rgba(33, 37, 41, 0.7);
-    border-radius: 8px;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    border-left: 3px solid var(--bs-primary);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+    margin: 5px 0;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .chat-message.nearby {
-    border-left-color: var(--bs-success);
+    border-left: 3px solid var(--bs-success);
 }
 
 .chat-message.far {
-    border-left-color: var(--bs-warning);
+    border-left: 3px solid var(--bs-warning);
     opacity: 0.7;
 }
 
+.chat-message.system-message {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--bs-warning);
+    text-align: center;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.message-sender {
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.message-timestamp {
+    font-size: 0.7em;
+    color: var(--bs-secondary);
+}
+
+.message-content {
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.message-content a {
+    color: var(--bs-info);
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
 .chat-input-container {
-    padding: 1rem;
-    background: rgba(33, 37, 41, 0.95);
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
     border-top: 1px solid var(--bs-primary);
 }
 
 #chatInput {
-    background: rgba(33, 37, 41, 0.9);
+    background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--bs-primary);
     color: var(--bs-light);
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
 }
 
-/* Allow body scrolling */
-html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
+#chatInput:focus {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px var(--bs-primary);
 }
 
-body {
-    overflow-y: auto;
+/* Nickname modal styling */
+.modal-content {
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--bs-primary);
 }
 
-/* Game container */
-#gameContainer {
-    position: relative;
-    width: 100%;
-    height: 100vh;
+.modal-header {
+    border-bottom: 1px solid var(--bs-primary);
+}
+
+.modal-title {
+    color: var(--bs-light);
+}
+
+#nickname {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--bs-primary);
+    color: var(--bs-light);
+}
+
+#nickname:focus {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px var(--bs-primary);
+}
+
+/* Scrollbar styling for chat */
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: var(--bs-primary);
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-info);
 }
