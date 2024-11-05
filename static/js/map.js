@@ -8,6 +8,20 @@ let score = 0;
 let particles = [];
 let nickname = localStorage.getItem('nickname') || 'Anonymous';
 let mapScale = 1;
+let fallbackSprite;
+
+// Create fallback sprite
+function createFallbackSprite() {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 48;
+    tempCanvas.height = 48;
+    const ctx = tempCanvas.getContext('2d');
+    ctx.fillStyle = '#4a90e2';
+    ctx.beginPath();
+    ctx.arc(24, 24, 20, 0, 2 * Math.PI);
+    ctx.fill();
+    return loadImage(tempCanvas.toDataURL());
+}
 
 const NPC_TYPES = {
     MERCHANT: {
@@ -25,23 +39,66 @@ const NPC_TYPES = {
 };
 
 function calculateScale() {
-    const container = document.getElementById('mapContainer');
-    if (!container) {
-        console.error('Map container not found!');
+    try {
+        const container = document.getElementById('mapContainer');
+        if (!container) {
+            console.error('Map container not found!');
+            return 1;
+        }
+        
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        
+        const scaleX = containerWidth / mapSize.width;
+        const scaleY = containerHeight / mapSize.height;
+        
+        mapScale = Math.min(scaleX, scaleY, 1);
+        console.log('Scale calculated:', mapScale);
+        return mapScale;
+    } catch (error) {
+        console.error('Error calculating scale:', error);
         return 1;
     }
-    
-    const containerWidth = container.clientWidth;
-    const containerHeight = container.clientHeight;
-    
-    const scaleX = containerWidth / mapSize.width;
-    const scaleY = containerHeight / mapSize.height;
-    
-    mapScale = Math.min(scaleX, scaleY, 1);
-    return mapScale;
+}
+
+function drawGrid() {
+    try {
+        push();
+        strokeWeight(1);
+        
+        // Main grid lines
+        stroke(255, 255, 255, 20);
+        for (let x = 0; x < mapSize.width; x += 50) {
+            line(x, 0, x, mapSize.height);
+        }
+        for (let y = 0; y < mapSize.height; y += 50) {
+            line(0, y, mapSize.width, y);
+        }
+        
+        // Retro sci-fi accents
+        stroke(255, 77, 0, 15);
+        for (let i = 0; i < mapSize.width; i += 100) {
+            line(i, 0, i, mapSize.height);
+            line(0, i, mapSize.width, i);
+        }
+        
+        // Glowing intersection points
+        noStroke();
+        fill(255, 77, 0, 20);
+        for (let x = 0; x < mapSize.width; x += 100) {
+            for (let y = 0; y < mapSize.height; y += 100) {
+                circle(x, y, 5);
+            }
+        }
+        
+        pop();
+    } catch (error) {
+        console.error('Error drawing grid:', error);
+    }
 }
 
 function initializeNPCs() {
+    console.log('Initializing NPCs...');
     const npcPositions = [
         { x: 100, y: 100, type: 'MERCHANT' },
         { x: 700, y: 500, type: 'GUARD' },
@@ -50,59 +107,40 @@ function initializeNPCs() {
     
     npcPositions.forEach(pos => {
         const npcType = NPC_TYPES[pos.type];
-        loadImage(npcType.sprite, img => {
-            npcs.push({
-                x: pos.x,
-                y: pos.y,
-                sprite: img,
-                type: pos.type,
-                message: npcType.message,
-                interactionRadius: 60,
-                lastInteraction: 0,
-                messageOpacity: 0
-            });
-        });
+        loadImage(npcType.sprite, 
+            img => {
+                console.log(`NPC sprite loaded successfully: ${pos.type}`);
+                npcs.push({
+                    x: pos.x,
+                    y: pos.y,
+                    sprite: img,
+                    type: pos.type,
+                    message: npcType.message,
+                    interactionRadius: 60,
+                    lastInteraction: 0,
+                    messageOpacity: 0
+                });
+            },
+            error => {
+                console.error(`Error loading NPC sprite: ${pos.type}`, error);
+                const fallback = createFallbackSprite();
+                npcs.push({
+                    x: pos.x,
+                    y: pos.y,
+                    sprite: fallback,
+                    type: pos.type,
+                    message: npcType.message,
+                    interactionRadius: 60,
+                    lastInteraction: 0,
+                    messageOpacity: 0
+                });
+            }
+        );
     });
 }
 
-function initializeCollectibles() {
-    const collectibleTypes = [
-        {
-            type: 'dragon_egg',
-            value: 30,
-            color: color(255, 215, 0),
-            sound: '/static/sounds/egg_collect.mp3'
-        },
-        {
-            type: 'dragon_scale',
-            value: 20,
-            color: color(74, 144, 226),
-            sound: '/static/sounds/scale_collect.mp3'
-        },
-        {
-            type: 'magic_crystal',
-            value: 40,
-            color: color(156, 39, 176),
-            sound: '/static/sounds/crystal_collect.mp3'
-        }
-    ];
-
-    for (let i = 0; i < 5; i++) {
-        const type = random(collectibleTypes);
-        collectibles.push({
-            x: random(50, mapSize.width - 50),
-            y: random(50, mapSize.height - 50),
-            type: type.type,
-            collected: false,
-            value: type.value,
-            color: type.color,
-            sound: type.sound,
-            pulsePhase: random(TWO_PI)
-        });
-    }
-}
-
 function setup() {
+    console.log('Setting up canvas...');
     const container = document.getElementById('mapContainer');
     if (!container) {
         console.error('Failed to find map container element!');
@@ -114,8 +152,12 @@ function setup() {
         canvas.parent('mapContainer');
         frameRate(60);
         
+        // Create fallback sprite
+        fallbackSprite = createFallbackSprite();
+        
         calculateScale();
         
+        // Initialize game elements
         initializeNPCs();
         initializeCollectibles();
         initBackgroundEffects();
@@ -123,8 +165,16 @@ function setup() {
         loadSavedPosition();
         setupNicknameHandling();
         
+        // Handle window resize
+        let resizeTimeout;
         window.addEventListener('resize', () => {
-            calculateScale();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                console.log('Handling resize...');
+                calculateScale();
+                // Ensure all elements are within bounds after resize
+                constrainPosition(myPosition);
+            }, 250);
         });
         
         console.log('Canvas setup completed successfully');
@@ -133,76 +183,99 @@ function setup() {
     }
 }
 
-function loadSavedPosition() {
-    const savedPosition = localStorage.getItem('playerPosition');
-    if (savedPosition) {
-        try {
-            const pos = JSON.parse(savedPosition);
-            myPosition = pos;
-        } catch (e) {
-            console.error('Error loading saved position:', e);
-        }
-    }
-}
-
-function setupNicknameHandling() {
-    const nicknameInput = document.getElementById('nicknameInput');
-    const saveButton = document.getElementById('saveNickname');
-    
-    nicknameInput.value = nickname;
-    
-    saveButton.addEventListener('click', () => {
-        const newNickname = nicknameInput.value.trim();
-        if (newNickname) {
-            nickname = newNickname;
-            localStorage.setItem('nickname', nickname);
-            socket.emit('nickname_update', { nickname });
-        }
-    });
+function constrainPosition(pos) {
+    pos.x = constrain(pos.x, 24, mapSize.width - 24);
+    pos.y = constrain(pos.y, 24, mapSize.height - 24);
 }
 
 function draw() {
-    mapScale = calculateScale();
-    push();
-    scale(mapScale); // Using p5.js scale() function
-    
-    let bgColor = getDayNightColor();
-    background(color(
-        red(bgColor) * 1.2,
-        green(bgColor) * 0.8,
-        blue(bgColor) * 0.7
-    ));
-    
-    drawBackgroundEffects();
-    updateWeather();
-    applyWeatherEffects();
-    drawGrid();
-    drawNPCs();
-    drawCollectibles();
-    
-    users.forEach((user, id) => {
-        drawCharacter(user.x, user.y, user.dragonSprite, user.nickname || 'Anonymous');
-    });
-    
-    drawCharacter(myPosition.x, myPosition.y, characterSprite, nickname);
-    
-    checkNPCInteractions();
-    checkCollectibles();
-    updateScore();
-    
-    if (frameCount % 60 === 0) {
-        localStorage.setItem('playerPosition', JSON.stringify(myPosition));
-        socket.emit('position_update', {
-            x: myPosition.x,
-            y: myPosition.y,
-            nickname: nickname
-        });
+    try {
+        mapScale = calculateScale();
+        push();
+        scale(mapScale);
+        
+        let bgColor = getDayNightColor();
+        background(color(
+            red(bgColor) * 1.2,
+            green(bgColor) * 0.8,
+            blue(bgColor) * 0.7
+        ));
+        
+        drawGrid();
+        drawBackgroundEffects();
+        updateWeather();
+        applyWeatherEffects();
+        
+        drawEntities();
+        
+        pop();
+    } catch (error) {
+        console.error('Error in draw loop:', error);
     }
-    
-    pop();
 }
 
-// ... rest of the code remains the same ...
+function drawEntities() {
+    try {
+        drawNPCs();
+        drawCollectibles();
+        
+        users.forEach((user, id) => {
+            drawCharacter(user.x, user.y, user.dragonSprite || fallbackSprite, user.nickname || 'Anonymous');
+        });
+        
+        drawCharacter(myPosition.x, myPosition.y, characterSprite || fallbackSprite, nickname);
+        
+        checkNPCInteractions();
+        checkCollectibles();
+        updateScore();
+        
+        if (frameCount % 60 === 0) {
+            localStorage.setItem('playerPosition', JSON.stringify(myPosition));
+            socket.emit('position_update', {
+                x: myPosition.x,
+                y: myPosition.y,
+                nickname: nickname
+            });
+        }
+    } catch (error) {
+        console.error('Error drawing entities:', error);
+    }
+}
+
+function drawCharacter(x, y, sprite, playerName) {
+    try {
+        push();
+        imageMode(CENTER);
+        
+        // Draw shadow
+        noStroke();
+        fill(0, 0, 0, 30);
+        ellipse(x, y + 24, 40, 20);
+        
+        // Draw character
+        if (sprite) {
+            image(sprite, x, y, 48, 48);
+        } else {
+            image(fallbackSprite, x, y, 48, 48);
+        }
+        
+        // Draw name
+        if (playerName) {
+            textAlign(CENTER);
+            textSize(14);
+            fill(0, 0, 0, 150);
+            noStroke();
+            const nameWidth = textWidth(playerName);
+            rect(x - nameWidth/2 - 5, y - 45, nameWidth + 10, 20, 5);
+            fill(255);
+            text(playerName, x, y - 30);
+        }
+        
+        pop();
+    } catch (error) {
+        console.error('Error drawing character:', error);
+    }
+}
 
 function mouseToGameCoords(mx, my) {
     return {
@@ -211,6 +284,7 @@ function mouseToGameCoords(mx, my) {
     };
 }
 
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof socket !== 'undefined') {
         socket.on('connect', () => {
