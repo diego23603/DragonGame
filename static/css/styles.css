@@ -1,4 +1,50 @@
-/* Add these styles at the end of the file */
+/* Game Layout */
+.game-layout {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+    margin: 1rem 0;
+}
+
+.map-container {
+    position: relative;
+    flex: 1;
+    min-height: 600px;
+    border: 2px solid var(--bs-warning);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.chat-wrapper {
+    width: 300px;
+    position: relative;
+    z-index: 2;
+}
+
+.chat-container {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid var(--bs-warning);
+    border-radius: 8px;
+    padding: 1rem;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+}
+
+.chat-input-container {
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--bs-warning);
+}
+
+/* Nickname Section */
 #nicknameSection {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(255, 77, 0, 0.1));
     padding: 20px;
@@ -41,4 +87,41 @@
     margin-top: 10px;
     border-radius: 5px;
     text-align: center;
+}
+
+/* Message Styles */
+.chat-message {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.25rem;
+    font-size: 0.8em;
+}
+
+.message-sender {
+    color: var(--bs-warning);
+}
+
+.message-timestamp {
+    color: var(--bs-secondary);
+}
+
+.message-content {
+    word-break: break-word;
+}
+
+/* Distance-based message styling */
+.chat-message.nearby {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-message.far {
+    background: rgba(255, 255, 255, 0.05);
+    opacity: 0.7;
 }

@@ -24,7 +24,7 @@
                     <span id="weatherDisplay" class="ms-3 weather-display neon-text"></span>
                 </div>
 
-                <div id="nicknameSection" class="mb-4 rune-border" style="display: none;">
+                <div id="nicknameSection" class="mb-4 rune-border">
                     <h3 class="neon-text">Your Nickname</h3>
                     <div id="nicknameDisplay" class="mb-2"></div>
                     <div class="input-group">
@@ -40,12 +40,11 @@
                     <div id="dragonOptions" class="d-flex justify-content-center gap-4"></div>
                 </div>
 
-                <div class="row">
-                    <div class="col-9">
-                        <div id="mapContainer" class="map-container synthwave-grid"></div>
-                    </div>
-                    <div class="col-3">
-                        <!-- Chat Interface -->
+                <div class="game-layout">
+                    <div id="mapContainer" class="map-container synthwave-grid"></div>
+                    
+                    <!-- Chat Interface -->
+                    <div class="chat-wrapper">
                         <div class="chat-container terminal-chat">
                             <div class="chat-messages" id="chatMessages"></div>
                             <div class="chat-input-container">

@@ -4,15 +4,6 @@ let availableDragons = [];
 async function initializeDragons() {
     console.log('Initializing dragons...');
     try {
-        // Check for authentication token first
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            console.log('User not authenticated');
-            document.getElementById('nicknameSection').style.display = 'none';
-            showNicknameFeedback('Please login to access your nickname settings', 'warning');
-            return;
-        }
-
         const response = await fetch('/static/dragons.json');
         if (!response.ok) {
             throw new Error(`Failed to load dragons: ${response.status}`);
@@ -26,38 +17,46 @@ async function initializeDragons() {
         
         availableDragons = data.dragons;
         
-        // Verify all dragon sprites exist
-        for (const dragon of availableDragons) {
-            try {
-                const spriteResponse = await fetch(dragon.sprite);
-                if (!spriteResponse.ok) {
-                    console.error(`Failed to load sprite for dragon ${dragon.name}: ${dragon.sprite}`);
-                }
-            } catch (error) {
-                console.error(`Error loading sprite for dragon ${dragon.name}:`, error);
-            }
-        }
-        
         // Load previously selected dragon from localStorage
         const savedDragonId = localStorage.getItem('selectedDragonId');
         if (savedDragonId) {
             selectedDragon = availableDragons.find(d => d.id === savedDragonId);
             if (selectedDragon) {
                 console.log('Restored previous dragon selection:', selectedDragon.name);
-                updateCharacterSprite(selectedDragon.sprite);
+                await loadDragonSprite(selectedDragon);
             }
         }
         
+        await loadAllDragonSprites();
         renderDragonOptions();
-        
-        // Show nickname section only if authenticated
-        document.getElementById('nicknameSection').style.display = 'block';
         
     } catch (error) {
         console.error('Error loading dragons:', error);
         const errorMessage = 'Failed to load dragons. Please refresh the page.';
         document.getElementById('dragonOptions').innerHTML = 
             `<div class="alert alert-danger">${errorMessage}</div>`;
+    }
+}
+
+async function loadAllDragonSprites() {
+    const loadPromises = availableDragons.map(dragon => loadDragonSprite(dragon));
+    await Promise.allSettled(loadPromises);
+}
+
+async function loadDragonSprite(dragon) {
+    try {
+        const spriteResponse = await fetch(dragon.sprite);
+        if (!spriteResponse.ok) {
+            console.error(`Failed to load sprite for dragon ${dragon.name}: ${dragon.sprite}`);
+            dragon.spriteLoadError = true;
+            return false;
+        }
+        dragon.spriteLoadError = false;
+        return true;
+    } catch (error) {
+        console.error(`Error loading sprite for dragon ${dragon.name}:`, error);
+        dragon.spriteLoadError = true;
+        return false;
     }
 }
 
@@ -84,6 +83,7 @@ function renderDragonOptions() {
                      style="cursor: pointer; transition: all 0.3s ease;"
                      onerror="this.onerror=null; this.src='/static/images/dragons/default-dragon.svg';">
                 <div class="dragon-name">${dragon.name}</div>
+                ${dragon.spriteLoadError ? '<div class="sprite-error">!</div>' : ''}
                 ${selectedDragon?.id === dragon.id ? 
                     '<div class="selected-indicator position-absolute top-0 start-0 w-100 h-100 border border-2 border-warning rounded"></div>' 
                     : ''}
@@ -129,6 +129,10 @@ function updateCharacterSprite(spritePath) {
         characterSprite = img;
     }, error => {
         console.error('Error loading sprite:', error);
+        // Load default sprite on error
+        loadImage('/static/images/dragons/default-dragon.svg', img => {
+            characterSprite = img;
+        });
     });
 }
 
@@ -227,6 +231,21 @@ style.textContent = `
     
     .selected-dragon {
         animation: pulse 2s infinite;
+    }
+    
+    .sprite-error {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 20px;
+        height: 20px;
+        background-color: var(--bs-danger);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
     }
     
     @keyframes pulse {
