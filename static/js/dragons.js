@@ -11,7 +11,6 @@ async function initializeDragons() {
         const data = await response.json();
         console.log('Dragons data loaded:', data);
         
-        // Validate dragons data structure
         if (!data.dragons || !Array.isArray(data.dragons)) {
             throw new Error('Invalid dragons data structure');
         }
@@ -41,6 +40,10 @@ async function initializeDragons() {
         }
         
         renderDragonOptions();
+        
+        // Show nickname section after initialization
+        document.getElementById('nicknameSection').style.display = 'block';
+        
     } catch (error) {
         console.error('Error loading dragons:', error);
         const errorMessage = 'Failed to load dragons. Please refresh the page.';
@@ -125,7 +128,68 @@ function updateCharacterSprite(spritePath) {
     });
 }
 
-// Add styles for dragon selection
+function updateNickname() {
+    const nicknameInput = document.getElementById('nicknameInput');
+    const nickname = nicknameInput.value.trim();
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = 'alert mt-2';
+    
+    if (!nickname) {
+        showNicknameFeedback('Please enter a valid nickname', 'danger');
+        return;
+    }
+    
+    if (nickname.length < 2 || nickname.length > 64) {
+        showNicknameFeedback('Nickname must be between 2 and 64 characters', 'danger');
+        return;
+    }
+    
+    fetch('/update-nickname', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({ nickname })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.message === 'Nickname updated successfully') {
+            document.getElementById('nicknameDisplay').textContent = `Nickname: ${data.nickname}`;
+            nicknameInput.value = '';
+            showNicknameFeedback('Nickname updated successfully!', 'success');
+        } else {
+            showNicknameFeedback(data.message, 'warning');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNicknameFeedback('Error updating nickname. Please try again.', 'danger');
+    });
+}
+
+function showNicknameFeedback(message, type) {
+    const container = document.getElementById('nicknameSection');
+    const existingFeedback = container.querySelector('.alert');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+    
+    const feedbackDiv = document.createElement('div');
+    feedbackDiv.className = `alert alert-${type} mt-2`;
+    feedbackDiv.textContent = message;
+    container.appendChild(feedbackDiv);
+    
+    setTimeout(() => {
+        feedbackDiv.remove();
+    }, 3000);
+}
+
 const style = document.createElement('style');
 style.textContent = `
     .dragon-option {
@@ -155,5 +219,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize dragons when the page loads
 document.addEventListener('DOMContentLoaded', initializeDragons);

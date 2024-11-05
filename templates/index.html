@@ -24,6 +24,15 @@
                     <span id="weatherDisplay" class="ms-3 weather-display neon-text"></span>
                 </div>
 
+                <div id="nicknameSection" class="mb-4 rune-border">
+                    <h3 class="neon-text">Your Nickname</h3>
+                    <div id="nicknameDisplay" class="mb-2"></div>
+                    <div class="input-group">
+                        <input type="text" id="nicknameInput" class="form-control bg-dark text-light" placeholder="Enter your nickname" maxlength="64">
+                        <button class="btn btn-outline-warning neon-text" type="button" onclick="updateNickname()">Update Nickname</button>
+                    </div>
+                </div>
+
                 <!-- Dragon Selection -->
                 <div id="dragonSelection" class="mb-4 dragon-selection-container rune-border">
                     <h3 class="selection-title neon-text">Choose Your Dragon</h3>
