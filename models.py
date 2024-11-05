@@ -6,6 +6,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
+    nickname = db.Column(db.String(64), nullable=True)  # New field for nickname
     x_pos = db.Column(db.Float, default=0)
     y_pos = db.Column(db.Float, default=0)
     sprite = db.Column(db.String(120), default='character_sprite.svg')

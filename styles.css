@@ -6,10 +6,10 @@ body {
     background: radial-gradient(circle, #1e3c72, #2a5298);
     color: #fff;
     text-align: center;
-    overflow-x: hidden; /* Permitir desplazamiento vertical, pero no horizontal */
+    overflow-x: hidden;
     background-size: cover;
     position: relative;
-    min-height: 100vh; /* Asegurar que el cuerpo ocupe al menos el 100% de la altura de la ventana */
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
@@ -33,17 +33,15 @@ body::before {
     100% { background-position: 1000px 1000px; }
 }
 
-/* Contenedor principal que permite el desplazamiento completo */
 #mainContainer {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding-bottom: 20px; /* Para evitar que el botón de "Jugar" quede pegado al final */
-    min-height: 100vh; /* Mantiene la altura completa de la pantalla */
+    padding-bottom: 20px;
+    min-height: 100vh;
 }
 
-/* Contenedor de dragones */
 #dragonsContainer {
     display: flex;
     justify-content: center;
@@ -75,7 +73,6 @@ body::before {
     cursor: pointer;
 }
 
-/* Botones */
 button {
     background: linear-gradient(135deg, #ff652f, #ffb703);
     color: white;
@@ -94,7 +91,6 @@ button:hover {
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.7), 0 0 20px rgba(255, 0, 0, 0.5);
 }
 
-/* Botón de inicio de juego */
 #playButton {
     font-size: 20px;
     margin-top: 30px;
@@ -102,18 +98,16 @@ button:hover {
     letter-spacing: 2px;
 }
 
-/* Estilo del canvas del juego */
 #gameCanvas {
     border: 3px solid rgba(255, 255, 255, 0.8);
     border-radius: 12px;
     margin-top: 40px;
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.8), 0px 0px 20px rgba(255, 255, 255, 0.5);
-    background-color: #e3f2fd; /* Fondo claro para mejor visibilidad */
+    background-color: #e3f2fd;
     backdrop-filter: blur(5px);
     transition: transform 0.2s ease;
 }
 
-/* Fondo dinámico para el canvas */
 #gameCanvas::before {
     content: '';
     position: absolute;
@@ -124,7 +118,7 @@ button:hover {
     background: linear-gradient(0deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
     opacity: 0.3;
     animation: moveGradient 5s linear infinite;
-    border-radius: 12px; /* Asegúrate de que el fondo dinámico tenga bordes redondeados */
+    border-radius: 12px;
 }
 
 @keyframes moveGradient {
@@ -136,125 +130,30 @@ button:hover {
     transform: scale(1.02);
 }
 
-/* Score */
 #scoreBoard {
     font-family: 'Press Start 2P', sans-serif;
     font-size: 22px;
-    color: #ff5722; /* Color brillante para la puntuación */
+    color: #ff5722;
     margin-top: 20px;
     text-shadow: 3px 3px 10px rgba(255, 255, 255, 0.8);
     letter-spacing: 1px;
 }
 
-/* Puntuación final */
 #finalScore {
-    font-family: 'Comic Sans MS', cursive, sans-serif; /* Tipografía diferente para la puntuación final */
-    font-size: 36px; /* Tamaño de la fuente más grande */
-    color: #ff5722; /* Color de letra brillante para mejor visibilidad */
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-size: 36px;
+    color: #ff5722;
     margin-top: 20px;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 87, 51, 0.5); /* Sombra de texto para destacar */
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 87, 51, 0.5);
 }
 
-/* Mensaje de puntuación durante el juego */
 #currentScore {
-    font-family: 'Press Start 2P', sans-serif; /* Usar la misma tipografía */
+    font-family: 'Press Start 2P', sans-serif;
     font-size: 28px;
-    color: #ff5722; /* Color brillante para la puntuación actual */
+    color: #ff5722;
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
 }
 
-/* Formularios */
-form {
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    border-radius: 15px;
-    width: 70%;
-    margin: 30px auto;
-    box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.7), 0px 0px 20px rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
-}
-
-input[type="text"], input[type="number"] {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 2px solid #444;
-    background-color: #333;
-    color: white;
-    margin: 10px 0;
-    font-family: 'Press Start 2P', sans-serif;
-    transition: border-color 0.3s, background-color 0.3s;
-}
-
-input[type="text"]:focus, input[type="number"]:focus {
-    border-color: #ff652f;
-    background-color: #222;
-}
-
-label {
-    font-size: 14px;
-    text-transform: uppercase;
-    color: #ffb703;
-    margin-bottom: 5px;
-    display: inline-block;
-}
-
-/* Animaciones */
-@keyframes flicker {
-    0% { opacity: 0.9; }
-    50% { opacity: 1; }
-    100% { opacity: 0.7; }
-}
-
-button, input {
-    animation: flicker 2s infinite alternate;
-}
-
-/* Fin del juego */
-#gameOverScreen {
-    font-family: 'Press Start 2P', sans-serif;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #ff5733;
-    font-size: 40px;
-    display: none; /* Se oculta inicialmente */
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-}
-
-#retryButton {
-    background: linear-gradient(135deg, #ff5733, #ffdf00);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-#retryButton:hover {
-    background: linear-gradient(135deg, #ffdf00, #ff652f);
-    transform: scale(1.1);
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.7), 0 0 20px rgba(255, 0, 0, 0.5);
-}
-
-/* Estilo de partículas */
-.particle {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.8;
-    animation: floatParticles 3s ease-in-out infinite;
-}
-
-@keyframes floatParticles {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0); }
-}
-
-/* Formularios */
 form {
     background-color: rgba(0, 0, 0, 0.8);
     padding: 20px;
@@ -290,41 +189,100 @@ label {
     display: inline-block;
 }
 
-/* Botones y efectos */
+@keyframes flicker {
+    0% { opacity: 0.9; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
 button, input {
     animation: flicker 2s infinite alternate;
 }
 
-button {
-    background: linear-gradient(135deg, #ff652f, #ffb703);
+#gameOverScreen {
+    font-family: 'Press Start 2P', sans-serif;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ff5733;
+    font-size: 40px;
+    display: none;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+#retryButton {
+    background: linear-gradient(135deg, #ff5733, #ffdf00);
     color: white;
     border: none;
     border-radius: 12px;
-    padding: 12px 25px;
+    padding: 10px 20px;
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
-    box-shadow: 0px 5px 15px rgba(255, 255, 255, 0.3);
 }
 
-button:hover {
-    background: linear-gradient(135deg, #ffb703, #ffdf00);
-    transform: scale(1.2) translateY(-5px);
+#retryButton:hover {
+    background: linear-gradient(135deg, #ffdf00, #ff652f);
+    transform: scale(1.1);
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.7), 0 0 20px rgba(255, 0, 0, 0.5);
 }
 
-/* Estilos para mensajes de juego y errores */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: floatParticles 3s ease-in-out infinite;
+}
+
+@keyframes floatParticles {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0); }
+}
+
 .message {
-    font-family: 'Press Start 2P', sans-serif; /* Tipografía del juego */
-    font-size: 20px; /* Tamaño de fuente */
-    color: #ffb703; /* Color dorado para los mensajes */
-    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8); /* Sombra para destacar el texto */
-    background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro semitransparente */
-    border: 2px solid #ff652f; /* Borde que resalte */
-    padding: 15px; /* Espaciado interno */
-    border-radius: 10px; /* Bordes redondeados */
-    margin: 20px auto; /* Margen para centrar */
-    width: 80%; /* Ancho de los mensajes */
-    text-align: center; /* Centrar texto */
-    transition: opacity 0.5s; /* Transición suave para la aparición */
+    font-family: 'Press Start 2P', sans-serif;
+    font-size: 20px;
+    color: #ffb703;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #ff652f;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 20px auto;
+    width: 80%;
+    text-align: center;
+    transition: opacity 0.5s;
+}
+
+#nicknameSection {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 15px;
+    margin: 20px auto;
+    max-width: 500px;
+    border: 2px solid var(--dragon-primary);
+}
+
+#nicknameDisplay {
+    font-size: 1.2em;
+    color: var(--dragon-secondary);
+    margin-bottom: 15px;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+#nicknameInput {
+    background-color: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--dragon-primary);
+    color: white;
+    padding: 8px;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+#nicknameInput:focus {
+    outline: none;
+    border-color: var(--dragon-secondary);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }

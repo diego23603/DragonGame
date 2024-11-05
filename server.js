@@ -7,25 +7,21 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const port = 3000;
 
-const onlineUsers = new Map(); // Almacena usuarios online y sus posiciones
-
+const onlineUsers = new Map();
 let activeSessions = [];
 
-// Servir archivos estáticos desde el directorio 'main/public'
 app.use(express.static(path.join(__dirname, 'main', 'public')));
 app.use(express.json());
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_secreta_muy_segura'; // Usar variable de entorno en producción
+const JWT_SECRET = process.env.JWT_SECRET || 'tu_clave_secreta_muy_segura';
 
-// Configurar rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100 // limita cada IP a 100 solicitudes por ventana
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 
 app.use(limiter);
 
-// Middleware para verificar el token JWT
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -39,28 +35,23 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Ruta para servir la página principal (index.html)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Ruta para servir menu.js
 app.get('/menu.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'main', 'public','js', 'menu.js'));
 });
 
-// Ruta para servir el CSS
 app.get('/css/styles.css', (req, res) => {
     res.sendFile(path.join(__dirname, 'main', 'public', 'css', 'styles.css'));
 });
 
-// Rutas para servir las imágenes de los dragones y el obstáculo
 app.get('/images/:imageName', (req, res) => {
     const imageName = req.params.imageName;
     res.sendFile(path.join(__dirname, 'main', 'public', 'images', imageName));
 });
 
-// Ruta para obtener dragones desde el archivo JSON (protegida)
 app.get('/dragons', authenticateToken, async (req, res) => {
     try {
         const dragonsPath = path.join(__dirname, 'dragons.json');
@@ -72,7 +63,7 @@ app.get('/dragons', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Error en el servidor al leer los dragones' });
     }
 });
-// Middleware to check if user is admin
+
 const isAdmin = (req, res, next) => {
     if (req.user && req.user.isAdmin) {
         next();
@@ -81,7 +72,6 @@ const isAdmin = (req, res, next) => {
     }
 };
 
-// Admin route to get all users
 app.get('/admin/users', authenticateToken, isAdmin, async (req, res) => {
     try {
         const usersPath = path.join(__dirname, 'users.json');
@@ -93,37 +83,29 @@ app.get('/admin/users', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Admin route to create a new user
 app.post('/admin/users', authenticateToken, isAdmin, async (req, res) => {
     const { username, password, isAdmin } = req.body;
-    // ... (implement user creation logic)
 });
 
-// Admin route to update a user
 app.put('/admin/users/:username', authenticateToken, isAdmin, async (req, res) => {
     const { username } = req.params;
     const { password, isAdmin } = req.body;
-    // ... (implement user update logic)
 });
 
-// Admin route to delete a user
 app.delete('/admin/users/:username', authenticateToken, isAdmin, async (req, res) => {
     const { username } = req.params;
-    // ... (implement user deletion logic)
 });
 
-// Admin route to get all active sessions
 app.get('/admin/sessions', authenticateToken, isAdmin, (req, res) => {
     res.json(activeSessions);
 });
 
-// Admin route to terminate a session
 app.delete('/admin/sessions/:sessionId', authenticateToken, isAdmin, (req, res) => {
     const { sessionId } = req.params;
     activeSessions = activeSessions.filter(session => session.id !== sessionId);
     res.json({ message: 'Session terminated successfully' });
 });
-// Ruta para guardar dragones en el archivo JSON (protegida)
+
 app.post('/dragons', authenticateToken, async (req, res) => {
     const dragons = req.body;
     const dragonsPath = path.join(__dirname, 'dragons.json');
@@ -141,11 +123,9 @@ app.post('/dragons', authenticateToken, async (req, res) => {
     }
 });
 
-// Ruta para el registro de usuarios
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
-    // Validación básica
     if (!username || !password || username.length < 3 || password.length < 6) {
         return res.status(400).json({ message: 'Datos de entrada inválidos' });
     }
@@ -157,7 +137,6 @@ app.post('/register', async (req, res) => {
             const data = await fs.readFile(usersPath, 'utf8');
             users = JSON.parse(data);
         } catch (error) {
-            // Si el archivo no existe, se creará uno nuevo
         }
 
         if (users.some(user => user.username === username)) {
@@ -174,19 +153,15 @@ app.post('/register', async (req, res) => {
         res.status(500).json({ message: 'Error en el servidor al registrar usuario' });
     }
 });
-// Añadir una nueva ruta para verificar el token
+
 app.get('/verify-token', authenticateToken, (req, res) => {
     res.json({ isAdmin: req.user.isAdmin });
 });
 
-// Añade esta ruta en tu archivo server.js
 app.post('/logout', authenticateToken, (req, res) => {
-    const sessionId = req.body.sessionId;
-    if (sessionId) {
-        // Eliminar la sesión del array de sesiones activas
-        activeSessions = activeSessions.filter(session => session.id !== sessionId);
-    }
-    res.json({ message: 'Sesión cerrada exitosamente' });
+    const username = req.user.username;
+    onlineUsers.delete(username);
+    res.json({ message: 'Logged out successfully' });
 });
 
 app.post('/login', async (req, res) => {
@@ -201,26 +176,37 @@ app.post('/login', async (req, res) => {
 
         if (user && await bcrypt.compare(password, user.password)) {
             const token = jwt.sign({ username: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
-            const sessionId = Math.random().toString(36).substring(7);
-            activeSessions.push({ id: sessionId, username: user.username, loginTime: new Date() });
-            res.json({ message: 'Inicio de sesión exitoso', token, sessionId, isAdmin: user.isAdmin });
+
+            const lastPosition = await getUserLastPosition(username);
+
+            onlineUsers.set(username, {
+                username,
+                nickname: user.nickname,
+                x: lastPosition.x || 400,
+                y: lastPosition.y || 300,
+                dragonImage: user.selectedDragon?.image || '/images/default-dragon.png'
+            });
+
+            res.json({
+                message: 'Login successful',
+                token,
+                isAdmin: user.isAdmin,
+                position: { x: lastPosition.x, y: lastPosition.y },
+                nickname: user.nickname
+            });
         } else {
-            res.status(401).json({ message: 'Credenciales inválidas' });
+            res.status(401).json({ message: 'Invalid credentials' });
         }
     } catch (error) {
-        console.error('Error al iniciar sesión:', error);
-        res.status(500).json({ message: 'Error en el servidor al iniciar sesión' });
+        console.error('Error during login:', error);
+        res.status(500).json({ message: 'Server error during login' });
     }
 });
 
-app.listen(port, () => {
-    console.log(`Servidor escuchando en http://localhost:${port}`);
-});
-
-// Añadir nuevas rutas para el manejo de usuarios online
 app.get('/online-users', authenticateToken, (req, res) => {
     const usersArray = Array.from(onlineUsers.values()).map(user => ({
         username: user.username,
+        nickname: user.nickname,
         x: user.x,
         y: user.y,
         dragonImage: user.dragonImage
@@ -238,7 +224,6 @@ app.post('/update-position', authenticateToken, (req, res) => {
         user.y = y;
         onlineUsers.set(username, user);
 
-        // Guardar posición en base de datos para persistencia
         updateUserPositionInDB(username, x, y)
             .then(() => res.json({ message: 'Position updated' }))
             .catch(error => res.status(500).json({ message: 'Error updating position' }));
@@ -247,53 +232,40 @@ app.post('/update-position', authenticateToken, (req, res) => {
     }
 });
 
-// Modificar la función de login para incluir la posición del usuario
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+app.post('/update-nickname', authenticateToken, async (req, res) => {
+    const { nickname } = req.body;
+    const username = req.user.username;
+
+    if (!nickname || nickname.length < 2 || nickname.length > 64) {
+        return res.status(400).json({ message: 'Nickname must be between 2 and 64 characters.' });
+    }
 
     try {
         const usersPath = path.join(__dirname, 'users.json');
         const data = await fs.readFile(usersPath, 'utf8');
         const users = JSON.parse(data);
 
-        const user = users.find(u => u.username === username);
+        const userIndex = users.findIndex(u => u.username === username);
+        if (userIndex !== -1) {
+            users[userIndex].nickname = nickname;
+            await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
+            
+            if (onlineUsers.has(username)) {
+                const user = onlineUsers.get(username);
+                user.nickname = nickname;
+                onlineUsers.set(username, user);
+            }
 
-        if (user && await bcrypt.compare(password, user.password)) {
-            const token = jwt.sign({ username: user.username, isAdmin: user.isAdmin }, JWT_SECRET, { expiresIn: '1h' });
-
-            // Obtener última posición conocida o usar valores por defecto
-            const lastPosition = await getUserLastPosition(username);
-
-            onlineUsers.set(username, {
-                username,
-                x: lastPosition.x || 400,
-                y: lastPosition.y || 300,
-                dragonImage: user.selectedDragon?.image || '/images/default-dragon.png'
-            });
-
-            res.json({
-                message: 'Login successful',
-                token,
-                isAdmin: user.isAdmin,
-                position: { x: lastPosition.x, y: lastPosition.y }
-            });
+            res.json({ message: 'Nickname updated successfully', nickname });
         } else {
-            res.status(401).json({ message: 'Invalid credentials' });
+            res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        console.error('Error during login:', error);
-        res.status(500).json({ message: 'Server error during login' });
+        console.error('Error updating nickname:', error);
+        res.status(500).json({ message: 'Server error while updating nickname' });
     }
 });
 
-// Modificar la función de logout para eliminar al usuario del mapa
-app.post('/logout', authenticateToken, (req, res) => {
-    const username = req.user.username;
-    onlineUsers.delete(username);
-    res.json({ message: 'Logged out successfully' });
-});
-
-// Función auxiliar para actualizar la posición en la base de datos
 async function updateUserPositionInDB(username, x, y) {
     const usersPath = path.join(__dirname, 'users.json');
     const data = await fs.readFile(usersPath, 'utf8');
@@ -306,7 +278,6 @@ async function updateUserPositionInDB(username, x, y) {
     }
 }
 
-// Función auxiliar para obtener la última posición conocida
 async function getUserLastPosition(username) {
     const usersPath = path.join(__dirname, 'users.json');
     const data = await fs.readFile(usersPath, 'utf8');
@@ -315,3 +286,7 @@ async function getUserLastPosition(username) {
     const user = users.find(u => u.username === username);
     return user?.lastPosition || { x: 400, y: 300 };
 }
+
+app.listen(port, () => {
+    console.log(`Servidor escuchando en http://localhost:${port}`);
+});
