@@ -1,7 +1,7 @@
-const CHAT_RANGE = 150; // Range in pixels for nearby chat
-const DISTANT_RANGE = 300; // Range for faded messages
-const MESSAGE_COOLDOWN = 1000; // 1 second cooldown between messages
-const MAX_MESSAGE_LENGTH = 500; // Maximum message length
+const CHAT_RANGE = 150;
+const DISTANT_RANGE = 300;
+const MESSAGE_COOLDOWN = 1000;
+const MAX_MESSAGE_LENGTH = 500;
 let lastMessageTime = 0;
 let currentNickname = '';
 let chatMinimized = false;
@@ -16,10 +16,14 @@ function initChat() {
 }
 
 function initializeChatSystem() {
-    const chatInput = document.getElementById('chatInput');
-    const sendButton = document.getElementById('sendMessage');
-    const chatWindow = document.getElementById('chatWindow');
+    setupChatWindow();
+    setupNicknameHandling();
+    setupMessageHandling();
+    setupWebSocket();
+}
 
+function setupChatWindow() {
+    const chatWindow = document.getElementById('chatWindow');
     if (typeof $ !== 'undefined') {
         try {
             $(chatWindow).draggable({
@@ -32,22 +36,38 @@ function initializeChatSystem() {
         }
     }
 
+    // Chat window controls
     document.querySelector('.minimize-chat')?.addEventListener('click', toggleChatMinimize);
     document.querySelector('.maximize-chat')?.addEventListener('click', toggleChatMaximize);
+    document.querySelector('.change-nickname')?.addEventListener('click', () => {
+        if (nicknameModal) {
+            const nicknameInput = document.getElementById('nickname');
+            nicknameInput.value = currentNickname;
+            nicknameModal.show();
+        }
+    });
+}
 
+function setupNicknameHandling() {
     function initializeModal() {
         try {
             if (typeof bootstrap !== 'undefined') {
-                nicknameModal = new bootstrap.Modal(document.getElementById('nicknameModal'), {
+                const modalElement = document.getElementById('nicknameModal');
+                nicknameModal = new bootstrap.Modal(modalElement, {
                     backdrop: 'static',
                     keyboard: false
                 });
-                
+
+                modalElement.addEventListener('shown.bs.modal', () => {
+                    document.getElementById('nickname').focus();
+                });
+
                 currentNickname = localStorage.getItem('nickname');
                 if (!currentNickname) {
                     nicknameModal.show();
                 } else {
                     updateNicknameDisplay();
+                    displaySystemMessage(`Welcome back, ${currentNickname}!`);
                 }
                 return true;
             } else {
@@ -69,6 +89,13 @@ function initializeChatSystem() {
         nicknameForm.addEventListener('submit', handleNicknameSubmission);
     }
 
+    initializeModal();
+}
+
+function setupMessageHandling() {
+    const chatInput = document.getElementById('chatInput');
+    const sendButton = document.getElementById('sendMessage');
+
     if (sendButton) {
         sendButton.addEventListener('click', sendMessage);
     }
@@ -77,23 +104,21 @@ function initializeChatSystem() {
         chatInput.addEventListener('keypress', handleMessageKeyPress);
         chatInput.addEventListener('input', validateMessageLength);
     }
+}
 
+function setupWebSocket() {
     if (typeof socket !== 'undefined') {
         socket.on('chat_message', handleChatMessage);
+        socket.on('nickname_changed', handleNicknameChanged);
     } else {
         console.error('Socket.io not initialized');
     }
-
-    initializeModal();
 }
 
 function handleFallbackNicknamePrompt() {
     const nickname = prompt('Enter your nickname (3-15 characters):');
     if (nickname && validateNickname(nickname)) {
-        currentNickname = nickname;
-        localStorage.setItem('nickname', nickname);
-        updateNicknameDisplay();
-        displaySystemMessage(`Welcome, ${nickname}! You can now chat with nearby players.`);
+        saveNickname(nickname);
     } else {
         alert('Invalid nickname! Please try again.');
         handleFallbackNicknamePrompt();
@@ -109,26 +134,44 @@ function validateNickname(nickname) {
 function handleNicknameSubmission(e) {
     e.preventDefault();
     const nicknameInput = document.getElementById('nickname');
+    const errorDiv = document.getElementById('nicknameError');
     const nickname = nicknameInput.value.trim();
     
     if (validateNickname(nickname)) {
-        currentNickname = nickname;
-        localStorage.setItem('nickname', nickname);
-        updateNicknameDisplay();
-        
-        const feedback = document.createElement('div');
-        feedback.className = 'alert alert-success mt-2';
-        feedback.textContent = 'Nickname saved successfully!';
-        nicknameInput.parentNode.appendChild(feedback);
-        
-        setTimeout(() => {
-            feedback.remove();
-            if (nicknameModal) {
-                nicknameModal.hide();
-            }
-            displaySystemMessage(`Welcome, ${nickname}! You can now chat with nearby players.`);
-        }, 1500);
+        saveNickname(nickname);
+    } else {
+        errorDiv.textContent = 'Invalid nickname! Please use 3-15 characters, letters, numbers, underscore or hyphen only.';
+        errorDiv.classList.remove('d-none');
+        nicknameInput.classList.add('is-invalid');
     }
+}
+
+function saveNickname(nickname) {
+    const oldNickname = currentNickname;
+    currentNickname = nickname;
+    localStorage.setItem('nickname', nickname);
+    
+    const feedback = document.createElement('div');
+    feedback.className = 'alert alert-success mt-2';
+    feedback.textContent = 'Nickname saved successfully!';
+    document.getElementById('nickname').parentNode.appendChild(feedback);
+    
+    setTimeout(() => {
+        feedback.remove();
+        if (nicknameModal) {
+            nicknameModal.hide();
+        }
+        
+        updateNicknameDisplay();
+        if (oldNickname) {
+            displaySystemMessage(`Nickname changed from ${oldNickname} to ${nickname}`);
+            if (socket) {
+                socket.emit('nickname_changed', { oldNickname, newNickname: nickname });
+            }
+        } else {
+            displaySystemMessage(`Welcome, ${nickname}! You can now chat with nearby players.`);
+        }
+    }, 1500);
 }
 
 function validateMessageLength(e) {
@@ -232,7 +275,11 @@ function toggleChatMaximize() {
 
 function updateNicknameDisplay() {
     const currentUser = document.getElementById('currentUser');
-    currentUser.innerHTML = `<span class="badge bg-primary">Chatting as: ${currentNickname}</span>`;
+    currentUser.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center gap-2">
+            <span class="badge bg-primary">Chatting as: ${currentNickname}</span>
+        </div>
+    `;
 }
 
 function displaySystemMessage(message) {
@@ -244,6 +291,10 @@ function displaySystemMessage(message) {
     `;
     chatMessages.appendChild(messageElement);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function handleNicknameChanged(data) {
+    displaySystemMessage(`${data.oldNickname} is now known as ${data.newNickname}`);
 }
 
 function handleChatMessage(data) {
