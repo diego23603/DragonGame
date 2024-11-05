@@ -131,9 +131,15 @@ function updateCharacterSprite(spritePath) {
 function updateNickname() {
     const nicknameInput = document.getElementById('nicknameInput');
     const nickname = nicknameInput.value.trim();
-    const feedbackDiv = document.createElement('div');
-    feedbackDiv.className = 'alert mt-2';
     
+    // Check for authentication token
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        showNicknameFeedback('Please login first to update your nickname', 'danger');
+        return;
+    }
+    
+    // Validate nickname
     if (!nickname) {
         showNicknameFeedback('Please enter a valid nickname', 'danger');
         return;
@@ -148,13 +154,16 @@ function updateNickname() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ nickname })
     })
     .then(response => {
+        if (response.status === 401) {
+            throw new Error('Authentication expired. Please login again.');
+        }
         if (!response.ok) {
-            throw new Error(response.statusText);
+            throw new Error(response.statusText || 'Failed to update nickname');
         }
         return response.json();
     })
@@ -169,7 +178,12 @@ function updateNickname() {
     })
     .catch(error => {
         console.error('Error:', error);
-        showNicknameFeedback('Error updating nickname. Please try again.', 'danger');
+        if (error.message.includes('Authentication expired')) {
+            localStorage.removeItem('authToken');
+            showNicknameFeedback(error.message, 'danger');
+        } else {
+            showNicknameFeedback('Error updating nickname. Please try again.', 'danger');
+        }
     });
 }
 
