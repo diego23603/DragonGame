@@ -6,6 +6,8 @@ let collectibles = [];
 let npcs = [];
 let score = 0;
 let particles = [];
+let nickname = localStorage.getItem('nickname') || 'Anonymous';
+let scale = 1;
 
 const NPC_TYPES = {
     MERCHANT: {
@@ -21,6 +23,18 @@ const NPC_TYPES = {
         message: 'Seeking ancient dragon magic?'
     }
 };
+
+function calculateScale() {
+    const container = document.getElementById('mapContainer');
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    const scaleX = containerWidth / mapSize.width;
+    const scaleY = containerHeight / mapSize.height;
+    
+    scale = Math.min(scaleX, scaleY, 1);
+    return scale;
+}
 
 function initializeNPCs() {
     const npcPositions = [
@@ -84,16 +98,58 @@ function initializeCollectibles() {
 }
 
 function setup() {
+    const container = document.getElementById('mapContainer');
     const canvas = createCanvas(mapSize.width, mapSize.height);
     canvas.parent('mapContainer');
     frameRate(60);
     
+    calculateScale();
+    
     initializeNPCs();
     initializeCollectibles();
     initBackgroundEffects();
+    
+    loadSavedPosition();
+    setupNicknameHandling();
+    
+    window.addEventListener('resize', () => {
+        calculateScale();
+    });
+}
+
+function loadSavedPosition() {
+    const savedPosition = localStorage.getItem('playerPosition');
+    if (savedPosition) {
+        try {
+            const pos = JSON.parse(savedPosition);
+            myPosition = pos;
+        } catch (e) {
+            console.error('Error loading saved position:', e);
+        }
+    }
+}
+
+function setupNicknameHandling() {
+    const nicknameInput = document.getElementById('nicknameInput');
+    const saveButton = document.getElementById('saveNickname');
+    
+    nicknameInput.value = nickname;
+    
+    saveButton.addEventListener('click', () => {
+        const newNickname = nicknameInput.value.trim();
+        if (newNickname) {
+            nickname = newNickname;
+            localStorage.setItem('nickname', nickname);
+            socket.emit('nickname_update', { nickname });
+        }
+    });
 }
 
 function draw() {
+    scale = calculateScale();
+    push();
+    scale(scale);
+    
     let bgColor = getDayNightColor();
     background(color(
         red(bgColor) * 1.2,
@@ -102,24 +158,32 @@ function draw() {
     ));
     
     drawBackgroundEffects();
-    
     updateWeather();
     applyWeatherEffects();
-    
     drawGrid();
     drawNPCs();
     drawCollectibles();
     
     users.forEach((user, id) => {
-        drawCharacter(user.x, user.y, user.dragonSprite, user.username);
+        drawCharacter(user.x, user.y, user.dragonSprite, user.nickname || 'Anonymous');
     });
     
-    drawCharacter(myPosition.x, myPosition.y, characterSprite, 'You');
+    drawCharacter(myPosition.x, myPosition.y, characterSprite, nickname);
     
     checkNPCInteractions();
     checkCollectibles();
-    
     updateScore();
+    
+    if (frameCount % 60 === 0) {
+        localStorage.setItem('playerPosition', JSON.stringify(myPosition));
+        socket.emit('position_update', {
+            x: myPosition.x,
+            y: myPosition.y,
+            nickname: nickname
+        });
+    }
+    
+    pop();
 }
 
 function drawGrid() {
@@ -346,6 +410,40 @@ function updateScore() {
     textSize(20);
     textAlign(LEFT, TOP);
     text(`Score: ${score}`, 10, 10);
+}
+
+function keyPressed() {
+    const step = 10;
+    let moved = false;
+    
+    if (keyCode === LEFT_ARROW) {
+        myPosition.x = max(24, myPosition.x - step);
+        moved = true;
+    } else if (keyCode === RIGHT_ARROW) {
+        myPosition.x = min(mapSize.width - 24, myPosition.x + step);
+        moved = true;
+    } else if (keyCode === UP_ARROW) {
+        myPosition.y = max(24, myPosition.y - step);
+        moved = true;
+    } else if (keyCode === DOWN_ARROW) {
+        myPosition.y = min(mapSize.height - 24, myPosition.y + step);
+        moved = true;
+    }
+    
+    if (moved) {
+        socket.emit('position_update', {
+            x: myPosition.x,
+            y: myPosition.y,
+            nickname: nickname
+        });
+    }
+}
+
+function mouseToGameCoords(mx, my) {
+    return {
+        x: mx / scale,
+        y: my / scale
+    };
 }
 
 document.addEventListener('DOMContentLoaded', () => {

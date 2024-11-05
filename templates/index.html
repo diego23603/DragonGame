@@ -12,10 +12,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <body class="dragon-themed dragon-cursor">
-    <div class="container crt">
+    <div class="container-fluid crt">
         <div class="row">
             <div class="col-12">
                 <h1 class="text-center mb-4 game-title neon-text">Dragon World</h1>
+                
+                <!-- Nickname Input -->
+                <div class="mb-3 nickname-container">
+                    <input type="text" id="nicknameInput" class="form-control mb-2" placeholder="Enter your nickname">
+                    <button id="saveNickname" class="btn btn-outline-warning neon-text">Save Nickname</button>
+                </div>
+
                 <div class="mb-3 time-controls">
                     <button id="toggleDayNight" class="btn btn-outline-warning neon-text">
                         Switch to Manual Mode
@@ -31,10 +38,10 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-9">
+                    <div class="col-md-9">
                         <div id="mapContainer" class="map-container synthwave-grid"></div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-md-3">
                         <!-- Chat Interface -->
                         <div class="chat-container terminal-chat">
                             <div class="chat-messages" id="chatMessages"></div>

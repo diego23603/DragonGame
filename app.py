@@ -25,6 +25,7 @@ socketio.init_app(app)
 # Store states
 collectibles_state = {}
 user_dragons = {}
+user_data = {}
 
 @app.route('/')
 def index():
@@ -38,21 +39,49 @@ def handle_connect():
 @socketio.on('position_update')
 def handle_position_update(data):
     sid = request.sid
+    user_data[sid] = {
+        'x': data['x'],
+        'y': data['y'],
+        'nickname': data.get('nickname', 'Anonymous'),
+        'dragonId': user_dragons.get(sid)
+    }
     emit('user_moved', {
         'userId': sid,
         'x': data['x'],
         'y': data['y'],
-        'dragonId': data.get('dragonId', None)
+        'nickname': data.get('nickname', 'Anonymous'),
+        'dragonId': user_dragons.get(sid)
     }, broadcast=True)
+
+@socketio.on('nickname_update')
+def handle_nickname_update(data):
+    sid = request.sid
+    if sid in user_data:
+        user_data[sid]['nickname'] = data['nickname']
+        emit('user_updated', {
+            'userId': sid,
+            'nickname': data['nickname']
+        }, broadcast=True)
 
 @socketio.on('dragon_selected')
 def handle_dragon_selected(data):
     sid = request.sid
     user_dragons[sid] = data['dragonId']
+    if sid in user_data:
+        user_data[sid]['dragonId'] = data['dragonId']
     emit('dragon_selected', {
         'userId': sid,
         'dragonId': data['dragonId']
     }, broadcast=True)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    sid = request.sid
+    if sid in user_data:
+        del user_data[sid]
+    if sid in user_dragons:
+        del user_dragons[sid]
+    emit('user_disconnected', {'userId': sid}, broadcast=True)
 
 @socketio.on('chat_message')
 def handle_chat_message(data):
