@@ -12,7 +12,10 @@ socket.on('connect', () => {
 socket.on('authenticated', (data) => {
     currentUsername = data.username;
     myPosition = data.position || { x: 400, y: 300 };
-    if (data.score) score = data.score;
+    if (data.score !== undefined) {
+        score = data.score;
+        updateScoreDisplay();
+    }
     if (data.selectedDragon) {
         selectDragon(data.selectedDragon);
     }
@@ -41,16 +44,38 @@ socket.on('score_update', (data) => {
     }
 });
 
-function emitPosition(x, y, dragonId) {
+function emitPosition(x, y, dragonId, currentScore) {
     if (socket && socket.connected) {
         socket.emit('position_update', {
             x,
             y,
             dragonId,
-            score,
+            score: currentScore,
             username: currentUsername
         });
     }
 }
 
-// Keep other event handlers unchanged
+function updateScoreDisplay() {
+    const scoreElement = document.getElementById('currentScore');
+    if (scoreElement) {
+        scoreElement.textContent = score;
+    }
+}
+
+// Emit score updates separately for important events
+function emitScoreUpdate(newScore) {
+    if (socket && socket.connected) {
+        socket.emit('score_update', {
+            score: newScore
+        });
+    }
+}
+
+socket.on('user_disconnected', (data) => {
+    users.delete(data.userId);
+});
+
+socket.on('chat_message', (data) => {
+    handleChatMessage(data);
+});
