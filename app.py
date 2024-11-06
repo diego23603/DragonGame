@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit
 from sqlalchemy.orm import DeclarativeBase
 import json
+from dotenv import load_dotenv
+load_dotenv()
 
 class Base(DeclarativeBase):
     pass
